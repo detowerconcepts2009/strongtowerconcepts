@@ -1,8 +1,8 @@
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
+import HomeSolutions from "../components/HomeSolutions";
 import QuickStats from "../components/QuickStats";
 import PropertySearch from "../components/PropertySearch";
-import PropertyCategories from "../components/PropertyCategories";
 import FeaturedProperties from "../components/FeaturedProperties";
 import InteriorNeeds from "../components/InteriorNeeds";
 import FeaturedAgents from "../components/FeaturedAgents";
@@ -13,17 +13,29 @@ import BecomeAgent from "../components/BecomeAgent";
 export default function Home() {
   return (
     <main className="min-h-screen bg-white">
+
       <Navbar />
+
       <Hero />
+
+      <HomeSolutions />
+
       <QuickStats />
+
       <PropertySearch />
-      <PropertyCategories />
+
       <FeaturedProperties />
+
       <InteriorNeeds />
+
       <FeaturedAgents />
+
       <Services />
+
       <WhyChooseUs />
+
       <BecomeAgent />
+
     </main>
   );
 }
