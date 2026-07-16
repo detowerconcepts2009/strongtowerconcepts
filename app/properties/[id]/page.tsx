@@ -1,10 +1,9 @@
-import Link from "next/link";
+import Button from "@/components/Button";
 
 export default function PropertyDetailsPage() {
   return (
     <main className="min-h-screen bg-gray-100">
 
-      {/* Header */}
       <section className="bg-blue-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-6">
 
@@ -25,15 +24,12 @@ export default function PropertyDetailsPage() {
 
       <div className="max-w-7xl mx-auto px-6 py-10 grid lg:grid-cols-3 gap-10">
 
-        {/* Left */}
         <div className="lg:col-span-2">
 
-          {/* Image */}
           <div className="bg-gray-300 rounded-xl h-[450px] flex items-center justify-center text-gray-600 text-2xl">
             Property Image
           </div>
 
-          {/* Price */}
           <div className="mt-8">
 
             <div className="flex items-center justify-between">
@@ -53,8 +49,6 @@ export default function PropertyDetailsPage() {
             </p>
 
           </div>
-
-          {/* Features */}
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
 
@@ -80,8 +74,6 @@ export default function PropertyDetailsPage() {
 
           </div>
 
-          {/* Description */}
-
           <div className="bg-white rounded-xl shadow p-6 mt-8">
 
             <h2 className="text-2xl font-bold text-blue-900 mb-4">
@@ -89,44 +81,17 @@ export default function PropertyDetailsPage() {
             </h2>
 
             <p className="text-gray-600 leading-8">
-
               This beautifully finished 4-bedroom detached duplex is located
               in the serene environment of Lekki Phase 1.
 
               It features spacious rooms, a modern fitted kitchen,
               ample parking space, CCTV installation,
               swimming pool, gym, and premium finishing.
-
             </p>
 
           </div>
 
-          {/* Amenities */}
-
-          <div className="bg-white rounded-xl shadow p-6 mt-8">
-
-            <h2 className="text-2xl font-bold text-blue-900 mb-6">
-              Amenities
-            </h2>
-
-            <div className="grid md:grid-cols-2 gap-4">
-
-              <p>✅ Swimming Pool</p>
-              <p>✅ CCTV Cameras</p>
-              <p>✅ Gym</p>
-              <p>✅ Security House</p>
-              <p>✅ POP Ceiling</p>
-              <p>✅ Walk-in Closet</p>
-              <p>✅ Balcony</p>
-              <p>✅ Borehole</p>
-
-            </div>
-
-          </div>
-
         </div>
-
-        {/* Sidebar */}
 
         <div>
 
@@ -144,17 +109,23 @@ export default function PropertyDetailsPage() {
               Verified Realtor
             </p>
 
-            <button className="w-full bg-green-600 text-white py-3 rounded-lg mt-8">
-              WhatsApp Agent
-            </button>
+            <div className="space-y-4 mt-8">
 
-            <button className="w-full bg-blue-900 text-white py-3 rounded-lg mt-4">
-              Call Agent
-            </button>
+              <Button
+                text="WhatsApp Agent"
+                variant="secondary"
+              />
 
-            <button className="w-full border border-blue-900 text-blue-900 py-3 rounded-lg mt-4">
-              Book Inspection
-            </button>
+              <Button
+                text="Call Agent"
+              />
+
+              <Button
+                text="Book Inspection"
+                variant="outline"
+              />
+
+            </div>
 
           </div>
 

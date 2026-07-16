@@ -1,41 +1,107 @@
+import Image from "next/image";
+import Button from "./Button";
+
 export default function Hero() {
+  const services = [
+    { icon: "🏠", title: "Marketplace", desc: "Properties • Vehicles • Interior" },
+    { icon: "💼", title: "Business Services", desc: "CAC • NIN • Business Registration" },
+    { icon: "💻", title: "ICT Solutions", desc: "Web • Hosting • Branding" },
+    { icon: "📦", title: "Cargo & Logistics", desc: "UK • USA • Canada • Europe" },
+  ];
+
   return (
-    <section
-      className="relative h-screen bg-cover bg-center flex items-center"
-      style={{
-        backgroundImage:
-          "url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1600')",
-      }}
-    >
-      {/* Dark Overlay */}
-      <div className="absolute inset-0 bg-black/60"></div>
+    <section className="relative overflow-hidden bg-gradient-to-br from-blue-950 via-blue-900 to-blue-700 text-white">
 
-      {/* Content */}
-      <div className="relative max-w-7xl mx-auto px-6 text-white">
-        <h1 className="text-5xl md:text-7xl font-bold leading-tight">
-          Strong Tower <br /> Concepts
-        </h1>
+      {/* Logo Watermark */}
+      <div className="absolute inset-0 flex items-center justify-center opacity-[0.06] pointer-events-none">
+        <Image
+          src="/images/logo/stc-logo.png"
+          alt="Strong Tower Concepts"
+          width={900}
+          height={900}
+          priority
+          className="object-contain"
+        />
+      </div>
 
-        <p className="mt-6 text-2xl text-blue-200">
-          One Vision, Many Solutions, Endless Value
-        </p>
+      {/* Decorative Glow */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-400/20 blur-3xl rounded-full"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-400/20 blur-3xl rounded-full"></div>
 
-        <p className="mt-8 max-w-2xl text-lg text-gray-200 leading-8">
-          Delivering innovative ICT solutions, website development,
-          web hosting, CAC registration, real estate services,
-          branding, internet solutions and business support
-          tailored to your success.
-        </p>
+      <div className="relative max-w-7xl mx-auto px-6 py-24">
 
-        <div className="mt-10 flex flex-wrap gap-4">
-          <button className="bg-blue-700 hover:bg-blue-800 px-8 py-4 rounded-lg font-semibold">
-            Explore Services
-          </button>
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
 
-          <button className="border border-white hover:bg-white hover:text-black px-8 py-4 rounded-lg">
-            Contact Us
-          </button>
+          {/* LEFT */}
+
+          <div>
+
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm uppercase tracking-widest">
+              Strong Tower Concepts
+            </span>
+
+            <h1 className="mt-8 text-5xl lg:text-7xl font-extrabold leading-tight">
+              One Vision.
+              <br />
+              Many Solutions.
+              <br />
+              Endless Value.
+            </h1>
+
+            <p className="mt-8 text-lg leading-8 text-gray-200 max-w-2xl">
+              Your trusted platform for buying, selling and connecting with
+              premium solutions in <strong>Properties</strong>,
+              <strong> Vehicles</strong>,
+              <strong> Interior Needs</strong>,
+              <strong> Business Services</strong>,
+              <strong> ICT Solutions</strong> and
+              <strong> International Cargo & Logistics.</strong>
+            </p>
+
+            <div className="flex flex-wrap gap-4 mt-10">
+
+              <Button
+                text="Explore Marketplace"
+                href="/marketplace"
+              />
+
+              <Button
+                text="Request a Service"
+                href="/contact"
+                variant="outline"
+              />
+
+            </div>
+
+          </div>
+
+          {/* RIGHT */}
+
+          <div className="grid sm:grid-cols-2 gap-5">
+
+            {services.map((item) => (
+              <div
+                key={item.title}
+                className="rounded-2xl border border-white/10 bg-white/10 backdrop-blur-md p-6 hover:bg-white/20 transition"
+              >
+                <div className="text-5xl">
+                  {item.icon}
+                </div>
+
+                <h3 className="mt-5 text-xl font-bold">
+                  {item.title}
+                </h3>
+
+                <p className="mt-3 text-gray-200 text-sm leading-6">
+                  {item.desc}
+                </p>
+              </div>
+            ))}
+
+          </div>
+
         </div>
+
       </div>
     </section>
   );

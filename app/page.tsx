@@ -4,6 +4,7 @@ import QuickStats from "../components/QuickStats";
 import PropertySearch from "../components/PropertySearch";
 import PropertyCategories from "../components/PropertyCategories";
 import FeaturedProperties from "../components/FeaturedProperties";
+import InteriorNeeds from "../components/InteriorNeeds";
 import FeaturedAgents from "../components/FeaturedAgents";
 import Services from "../components/Services";
 import WhyChooseUs from "../components/WhyChooseUs";
@@ -18,6 +19,7 @@ export default function Home() {
       <PropertySearch />
       <PropertyCategories />
       <FeaturedProperties />
+      <InteriorNeeds />
       <FeaturedAgents />
       <Services />
       <WhyChooseUs />
