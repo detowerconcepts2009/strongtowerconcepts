@@ -1,45 +1,22 @@
-////////////////////////////////////////////////////////////
-//
-// STRONG TOWER CONCEPTS
-// PRODUCTION DATABASE
-// VERSION 1.0
-//
-// SPRINT 1 - PART 1
-//
-////////////////////////////////////////////////////////////
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
-////////////////////////////////////////////////////////////
-//
+//////////////////////////////////////////////////////
 // ENUMS
-//
-////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
 
 enum UserRole {
   SUPER_ADMIN
   ADMIN
   STAFF
-
   CUSTOMER
-
   PROPERTY_OWNER
   REALTOR
-
-  VEHICLE_DEALER
-
-  FURNITURE_VENDOR
-
-  BUSINESS_PARTNER
-
-  SERVICE_PROVIDER
 }
 
 enum AccountStatus {
@@ -54,6 +31,136 @@ enum VerificationStatus {
   VERIFIED
   REJECTED
 }
+
+enum WalletTransactionType {
+  DEPOSIT
+  PAYMENT
+  COMMISSION
+  REFUND
+  WITHDRAWAL
+}
+
+enum WalletTransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+enum BusinessType {
+  PROPERTY
+  GENERAL
+}
+
+//////////////////////////////////////////////////////
+// USER
+//////////////////////////////////////////////////////
+
+model User {
+
+  id              String   @id @default(cuid())
+
+  firstName       String
+
+  lastName        String
+
+  email           String   @unique
+
+  phone           String   @unique
+
+  passwordHash    String
+
+  role            UserRole
+
+  status          AccountStatus @default(PENDING)
+
+  verified        Boolean @default(false)
+
+  createdAt       DateTime @default(now())
+
+  updatedAt       DateTime @updatedAt
+
+    wallet          Wallet?
+
+    businessPage    BusinessPage?
+
+    listings        Listing[]
+
+    favorites       Favorite[]
+}
+//////////////////////////////////////////////////////
+// WALLET
+//////////////////////////////////////////////////////
+
+model Wallet {
+
+  id              String @id @default(cuid())
+
+  userId          String @unique
+
+  balance         Decimal @default(0)
+
+  createdAt       DateTime @default(now())
+
+  updatedAt       DateTime @updatedAt
+
+  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  transactions    WalletTransaction[]
+
+}
+
+//////////////////////////////////////////////////////
+// WALLET TRANSACTIONS
+//////////////////////////////////////////////////////
+
+model WalletTransaction {
+
+  id              String @id @default(cuid())
+
+  walletId        String
+
+  reference       String @unique
+
+  type            WalletTransactionType
+
+  status          WalletTransactionStatus
+
+  amount          Decimal
+
+  createdAt       DateTime @default(now())
+
+  wallet          Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+}
+//////////////////////////////////////////////////////
+// BUSINESS PAGE
+//////////////////////////////////////////////////////
+
+model BusinessPage {
+
+  id                    String @id @default(cuid())
+
+  ownerId               String @unique
+
+  businessName          String
+
+  slug                  String @unique
+
+  businessType          BusinessType
+
+  verificationStatus    VerificationStatus @default(PENDING)
+
+  createdAt             DateTime @default(now())
+
+  updatedAt             DateTime @updatedAt
+
+  owner                 User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+}
+//////////////////////////////////////////////////////
+// LISTINGS
+//////////////////////////////////////////////////////
 
 enum ListingStatus {
   DRAFT
@@ -72,546 +179,85 @@ enum ListingType {
   PRODUCT
   SERVICE
   EDUCATION
-}
-
-enum WalletTransactionType {
-  DEPOSIT
-  PAYMENT
-  COMMISSION
-  REFUND
-  WITHDRAWAL
-  ESCROW
-  BONUS
-}
-
-enum WalletTransactionStatus {
-  PENDING
-  SUCCESS
-  FAILED
-  CANCELLED
-}
-
-enum BusinessType {
-  PROPERTY
-  VEHICLE
-  FURNITURE
-  SERVICES
-  EDUCATION
-  GENERAL
-}
-
-////////////////////////////////////////////////////////////
-//
-// USER
-//
-////////////////////////////////////////////////////////////
-
-model User {
-
-  id              String   @id @default(cuid())
-
-  firstName       String
-
-  lastName        String
-
-  email           String   @unique
-
-  phone           String   @unique
-
-  passwordHash    String
-
-  profilePhoto    String?
-
-  role            UserRole
-
-  status          AccountStatus @default(PENDING)
-
-  verified        Boolean @default(false)
-
-  emailVerified   Boolean @default(false)
-
-  phoneVerified   Boolean @default(false)
-
-  createdAt       DateTime @default(now())
-
-  updatedAt       DateTime @updatedAt
-
-  wallet          Wallet?
-
-  businessPage    BusinessPage?
 
 }
-
-////////////////////////////////////////////////////////////
-//
-// WALLET
-//
-////////////////////////////////////////////////////////////
-
-model Wallet {
-
-  id              String @id @default(cuid())
-
-  userId          String @unique
-
-  balance         Decimal @default(0.00)
-
-  escrowBalance   Decimal @default(0.00)
-
-  commission      Decimal @default(0.00)
-
-  createdAt       DateTime @default(now())
-
-  updatedAt       DateTime @updatedAt
-
-  user User @relation(
-    fields:[userId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-  transactions WalletTransaction[]
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// WALLET TRANSACTIONS
-//
-////////////////////////////////////////////////////////////
-
-model WalletTransaction {
-
-  id              String @id @default(cuid())
-
-  walletId        String
-
-  reference       String @unique
-
-  type            WalletTransactionType
-
-  status          WalletTransactionStatus
-
-  amount          Decimal
-
-  description     String?
-
-  createdAt       DateTime @default(now())
-
-  wallet Wallet @relation(
-    fields:[walletId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// BUSINESS PAGE
-//
-////////////////////////////////////////////////////////////
-
-model BusinessPage {
-
-  id                  String @id @default(cuid())
-
-  ownerId             String @unique
-
-  businessName        String
-
-  slug                String @unique
-
-  businessType        BusinessType
-
-  description         String?
-
-  logo                String?
-
-  coverImage          String?
-
-  email               String?
-
-  phone               String?
-
-  whatsapp            String?
-
-  website             String?
-
-  address             String?
-
-  city                String?
-
-  state               String?
-
-  country             String?
-
-  verified            Boolean @default(false)
-
-  verificationStatus  VerificationStatus @default(PENDING)
-
-  rating              Float @default(0)
-
-  totalReviews        Int @default(0)
-
-  createdAt           DateTime @default(now())
-
-  updatedAt           DateTime @updatedAt
-
-  owner User @relation(
-    fields:[ownerId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// USER ADDRESS
-//
-////////////////////////////////////////////////////////////
-
-model UserAddress {
-
-  id              String @id @default(cuid())
-
-  userId          String @unique
-
-  addressLine1    String
-
-  addressLine2    String?
-
-  city            String
-
-  state           String
-
-  country         String
-
-  postalCode      String?
-
-  latitude        Float?
-
-  longitude       Float?
-
-  createdAt       DateTime @default(now())
-
-  updatedAt       DateTime @updatedAt
-
-  user User @relation(
-    fields:[userId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// AUTH ACCOUNT
-//
-////////////////////////////////////////////////////////////
-
-model Account {
-
-  id                 String @id @default(cuid())
-
-  userId             String
-
-  provider           String
-
-  providerAccountId  String
-
-  refreshToken       String?
-
-  accessToken        String?
-
-  expiresAt          Int?
-
-  tokenType          String?
-
-  scope              String?
-
-  idToken            String?
-
-  sessionState       String?
-
-  createdAt          DateTime @default(now())
-
-  updatedAt          DateTime @updatedAt
-
-  user User @relation(
-    fields:[userId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-  @@unique([provider, providerAccountId])
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// SESSION
-//
-////////////////////////////////////////////////////////////
-
-model Session {
-
-  id            String @id @default(cuid())
-
-  sessionToken  String @unique
-
-  userId        String
-
-  expires       DateTime
-
-  createdAt     DateTime @default(now())
-
-  user User @relation(
-    fields:[userId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// VERIFICATION TOKEN
-//
-////////////////////////////////////////////////////////////
-
-model VerificationToken {
-
-  identifier String
-
-  token      String @unique
-
-  expires    DateTime
-
-  @@unique([identifier, token])
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// NOTIFICATIONS
-//
-////////////////////////////////////////////////////////////
-
-model Notification {
-
-  id              String @id @default(cuid())
-
-  userId          String
-
-  title           String
-
-  message         String
-
-  read            Boolean @default(false)
-
-  createdAt       DateTime @default(now())
-
-  user User @relation(
-    fields:[userId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// FILE UPLOADS
-//
-////////////////////////////////////////////////////////////
-
-model Upload {
-
-  id              String @id @default(cuid())
-
-  uploaderId      String
-
-  fileName        String
-
-  originalName    String
-
-  mimeType        String
-
-  fileSize        Int
-
-  url             String
-
-  folder          String?
-
-  createdAt       DateTime @default(now())
-
-  uploader User @relation(
-    fields:[uploaderId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// AUDIT LOG
-//
-////////////////////////////////////////////////////////////
-
-model AuditLog {
-
-  id              String @id @default(cuid())
-
-  userId          String?
-
-  action          String
-
-  module          String
-
-  recordId        String?
-
-  ipAddress       String?
-
-  userAgent       String?
-
-  createdAt       DateTime @default(now())
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// SPRINT 2
-// UNIFIED LISTING ENGINE
-//
-////////////////////////////////////////////////////////////
 
 model Listing {
 
-  id                String @id @default(cuid())
-
-  ownerId           String
-
-  listingType       ListingType
-
-  title             String
-
-  slug              String @unique
-
-  description       String
-
-  shortDescription  String?
-
-  featured          Boolean @default(false)
-
-  verified          Boolean @default(false)
-
-  status            ListingStatus @default(PENDING)
-
-  price             Decimal
-
-  negotiable        Boolean @default(false)
-
-  currency          String @default("NGN")
-
-  views             Int @default(0)
-
-  totalFavorites    Int @default(0)
-
-  totalReviews      Int @default(0)
-
-  averageRating     Float @default(0)
-
-  publishedAt       DateTime?
-
-  createdAt         DateTime @default(now())
-
-  updatedAt         DateTime @updatedAt
-
-  owner User @relation(
-    fields:[ownerId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-  images            ListingImage[]
-
-  reviews           Review[]
-
-  favorites         Favorite[]
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// LISTING IMAGES
-//
-////////////////////////////////////////////////////////////
-
-model ListingImage {
-
   id              String @id @default(cuid())
 
-  listingId       String
+  ownerId         String
 
-  imageUrl        String
+  listingType     ListingType
 
-  caption         String?
+  status          ListingStatus @default(PENDING)
 
-  isCover         Boolean @default(false)
+  title           String
 
-  sortOrder       Int @default(0)
+  slug            String @unique
+
+  description     String
+
+  price           Decimal
 
   createdAt       DateTime @default(now())
 
-  listing Listing @relation(
-    fields:[listingId],
-    references:[id],
-    onDelete:Cascade
-  )
+  updatedAt       DateTime @updatedAt
+
+  owner           User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+    images          ListingImage[]
+
+    favorites       Favorite[]
+
+    reviews         Review[]
+
+    property        Property?
+
+}
+//////////////////////////////////////////////////////
+// LISTING IMAGES
+//////////////////////////////////////////////////////
+
+model ListingImage {
+
+  id          String @id @default(cuid())
+
+  listingId   String
+
+  imageUrl    String
+
+  createdAt   DateTime @default(now())
+
+  listing      Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
 }
 
-////////////////////////////////////////////////////////////
-//
+//////////////////////////////////////////////////////
 // FAVORITES
-//
-////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
 
 model Favorite {
 
-  id            String @id @default(cuid())
+  id          String @id @default(cuid())
 
-  userId        String
+  userId      String
 
-  listingId     String
+  listingId   String
 
-  createdAt     DateTime @default(now())
+  createdAt   DateTime @default(now())
 
-  user User @relation(
-    fields:[userId],
-    references:[id],
-    onDelete:Cascade
-  )
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  listing Listing @relation(
-    fields:[listingId],
-    references:[id],
-    onDelete:Cascade
-  )
+  listing      Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   @@unique([userId, listingId])
 
 }
 
-////////////////////////////////////////////////////////////
-//
+//////////////////////////////////////////////////////
 // REVIEWS
-//
-////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
 
 model Review {
 
@@ -627,27 +273,12 @@ model Review {
 
   createdAt     DateTime @default(now())
 
-  updatedAt     DateTime @updatedAt
-
-  listing Listing @relation(
-    fields:[listingId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-  reviewer User @relation(
-    fields:[reviewerId],
-    references:[id],
-    onDelete:Cascade
-  )
+  listing        Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
 }
-
-////////////////////////////////////////////////////////////
-//
+//////////////////////////////////////////////////////
 // PROPERTY MODULE
-//
-////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
 
 enum PropertyCategory {
   LAND
@@ -676,1437 +307,68 @@ model Property {
 
   purpose           PropertyPurpose
 
-  bedrooms          Int?
-
-  bathrooms         Int?
-
-  toilets           Int?
-
-  parkingSpaces     Int?
-
-  landSize          Float?
-
-  landUnit          String?
-
-  floorArea         Float?
-
-  yearBuilt         Int?
-
-  furnished         Boolean @default(false)
-
-  serviced          Boolean @default(false)
-
-  gatedEstate       Boolean @default(false)
-
   state             String
 
   city              String
 
   address           String
 
-  latitude          Float?
-
-  longitude         Float?
-
   createdAt         DateTime @default(now())
 
   updatedAt         DateTime @updatedAt
 
-  listing Listing @relation(
-    fields:[listingId],
-    references:[id],
-    onDelete:Cascade
-  )
+  listing           Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
-  features PropertyFeature[]
+  features          PropertyFeature[]
 
-  documents PropertyDocument[]
+  documents         PropertyDocument[]
 
-  inspections PropertyInspection[]
+  inspections       PropertyInspection[]
 
 }
-
-////////////////////////////////////////////////////////////
-//
-// PROPERTY FEATURES
-//
-////////////////////////////////////////////////////////////
 
 model PropertyFeature {
 
-  id            String @id @default(cuid())
+  id                String @id @default(cuid())
 
-  propertyId    String
+  propertyId        String
 
-  name          String
+  name              String
 
-  value         String?
+  value             String?
 
-  property Property @relation(
-    fields:[propertyId],
-    references:[id],
-    onDelete:Cascade
-  )
+  property          Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
 }
-
-////////////////////////////////////////////////////////////
-//
-// PROPERTY DOCUMENTS
-//
-////////////////////////////////////////////////////////////
 
 model PropertyDocument {
 
-  id            String @id @default(cuid())
+  id                String @id @default(cuid())
 
-  propertyId    String
+  propertyId        String
 
-  title         String
+  title             String
 
-  fileUrl       String
+  fileUrl           String
 
-  verified      Boolean @default(false)
+  verified          Boolean @default(false)
 
-  uploadedAt    DateTime @default(now())
-
-  property Property @relation(
-    fields:[propertyId],
-    references:[id],
-    onDelete:Cascade
-  )
+  property          Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
 }
-
-////////////////////////////////////////////////////////////
-//
-// PROPERTY INSPECTION
-//
-////////////////////////////////////////////////////////////
 
 model PropertyInspection {
 
-  id            String @id @default(cuid())
-
-  propertyId    String
-
-  customerId    String
-
-  inspectionDate DateTime
-
-  status        String
-
-  notes         String?
-
-  createdAt     DateTime @default(now())
-
-  property Property @relation(
-    fields:[propertyId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// VEHICLE MODULE
-//
-////////////////////////////////////////////////////////////
-
-enum VehicleCondition {
-  BRAND_NEW
-  FOREIGN_USED
-  NIGERIAN_USED
-}
-
-enum FuelType {
-  PETROL
-  DIESEL
-  HYBRID
-  ELECTRIC
-}
-
-enum TransmissionType {
-  AUTOMATIC
-  MANUAL
-}
-
-model Vehicle {
-
   id                String @id @default(cuid())
 
-  listingId         String @unique
+  propertyId        String
 
-  make              String
-
-  model             String
-
-  year              Int
-
-  condition         VehicleCondition
-
-  bodyType          String
-
-  transmission      TransmissionType
-
-  fuelType          FuelType
-
-  color             String
-
-  mileage           Int
-
-  engineSize        String?
-
-  driveType         String?
-
-  vin               String? @unique
-
-  registered        Boolean @default(false)
-
-  state             String
-
-  city              String
-
-  address           String?
-
-  latitude          Float?
-
-  longitude         Float?
-
-  createdAt         DateTime @default(now())
-
-  updatedAt         DateTime @updatedAt
-
-  listing Listing @relation(
-    fields:[listingId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-  trustScore VehicleTrustScore?
-
-  vinReport VINReport?
-
-  inspections VehicleInspection[]
-
-  financingRequests VehicleFinancing[]
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// VIN REPORT
-//
-////////////////////////////////////////////////////////////
-
-model VINReport {
-
-  id                String @id @default(cuid())
-
-  vehicleId         String @unique
-
-  manufacturer      String?
-
-  country           String?
-
-  engine            String?
-
-  transmission      String?
-
-  theftRecord       Boolean @default(false)
-
-  floodDamage       Boolean @default(false)
-
-  salvageRecord     Boolean @default(false)
-
-  accidentRecord    Boolean @default(false)
-
-  recallStatus      String?
-
-  createdAt         DateTime @default(now())
-
-  vehicle Vehicle @relation(
-    fields:[vehicleId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// TRUST SCORE
-//
-////////////////////////////////////////////////////////////
-
-model VehicleTrustScore {
-
-  id                    String @id @default(cuid())
-
-  vehicleId             String @unique
-
-  score                 Float
-
-  vinVerified           Boolean @default(false)
-
-  ownershipVerified     Boolean @default(false)
-
-  inspectionPassed      Boolean @default(false)
-
-  mileageVerified       Boolean @default(false)
-
-  accidentFree          Boolean @default(false)
-
-  theftClear            Boolean @default(false)
-
-  updatedAt             DateTime @updatedAt
-
-  vehicle Vehicle @relation(
-    fields:[vehicleId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// VEHICLE INSPECTION
-//
-////////////////////////////////////////////////////////////
-
-model VehicleInspection {
-
-  id                String @id @default(cuid())
-
-  vehicleId         String
-
-  inspectorName     String
+  customerName      String
 
   inspectionDate    DateTime
 
-  reportUrl         String?
+  status            String
 
-  passed            Boolean
-
-  notes             String?
-
-  createdAt         DateTime @default(now())
-
-  vehicle Vehicle @relation(
-    fields:[vehicleId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// VEHICLE FINANCING
-//
-////////////////////////////////////////////////////////////
-
-model VehicleFinancing {
-
-  id                    String @id @default(cuid())
-
-  vehicleId             String
-
-  applicantName         String
-
-  applicantEmail        String
-
-  applicantPhone        String
-
-  monthlyIncome         Decimal
-
-  depositAmount         Decimal?
-
-  repaymentDuration     Int?
-
-  status                String
-
-  createdAt             DateTime @default(now())
-
-  vehicle Vehicle @relation(
-    fields:[vehicleId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// FURNITURE & INTERIOR MODULE
-//
-////////////////////////////////////////////////////////////
-
-enum FurnitureCategory {
-  MATTRESS
-  BED
-  SOFA
-  CHAIR
-  TABLE
-  WARDROBE
-  OFFICE
-  KITCHEN
-  TV_STAND
-  HOME_DECOR
-  OTHER
-}
-
-enum FurnitureCondition {
-  BRAND_NEW
-  USED
-}
-
-model Furniture {
-
-  id                String @id @default(cuid())
-
-  listingId         String @unique
-
-  category          FurnitureCategory
-
-  brand             String?
-
-  material          String?
-
-  color             String?
-
-  condition         FurnitureCondition
-
-  quantity          Int @default(1)
-
-  width             Float?
-
-  height            Float?
-
-  length            Float?
-
-  weight            Float?
-
-  warrantyMonths    Int?
-
-  assemblyRequired  Boolean @default(false)
-
-  deliveryAvailable Boolean @default(true)
-
-  installationAvailable Boolean @default(false)
-
-  createdAt         DateTime @default(now())
-
-  updatedAt         DateTime @updatedAt
-
-  listing Listing @relation(
-    fields:[listingId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-  specifications FurnitureSpecification[]
-
-  delivery FurnitureDelivery?
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// FURNITURE SPECIFICATIONS
-//
-////////////////////////////////////////////////////////////
-
-model FurnitureSpecification {
-
-  id              String @id @default(cuid())
-
-  furnitureId     String
-
-  name            String
-
-  value           String
-
-  furniture Furniture @relation(
-    fields:[furnitureId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// DELIVERY INFORMATION
-//
-////////////////////////////////////////////////////////////
-
-model FurnitureDelivery {
-
-  id                  String @id @default(cuid())
-
-  furnitureId         String @unique
-
-  estimatedDays       Int
-
-  deliveryFee         Decimal
-
-  installationFee     Decimal?
-
-  returnPolicy        String?
-
-  createdAt           DateTime @default(now())
-
-  furniture Furniture @relation(
-    fields:[furnitureId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// GENERAL MARKETPLACE MODULE
-//
-////////////////////////////////////////////////////////////
-
-enum ProductCategory {
-  ELECTRONICS
-  PHONES
-  COMPUTERS
-  FASHION
-  APPLIANCES
-  AGRICULTURE
-  CONSTRUCTION
-  OFFICE
-  BEAUTY
-  SPORTS
-  BOOKS
-  OTHER
-}
-
-enum ProductCondition {
-  BRAND_NEW
-  USED
-  REFURBISHED
-}
-
-model Product {
-
-  id                  String @id @default(cuid())
-
-  listingId           String @unique
-
-  category            ProductCategory
-
-  brand               String?
-
-  sku                 String?
-
-  condition           ProductCondition
-
-  quantity            Int @default(1)
-
-  warrantyMonths      Int?
-
-  deliveryAvailable   Boolean @default(true)
-
-  createdAt           DateTime @default(now())
-
-  updatedAt           DateTime @updatedAt
-
-  listing Listing @relation(
-    fields:[listingId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-  specifications ProductSpecification[]
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// PRODUCT SPECIFICATIONS
-//
-////////////////////////////////////////////////////////////
-
-model ProductSpecification {
-
-  id              String @id @default(cuid())
-
-  productId       String
-
-  name            String
-
-  value           String
-
-  product Product @relation(
-    fields:[productId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// PROFESSIONAL SERVICES MODULE
-//
-////////////////////////////////////////////////////////////
-
-enum ServiceCategory {
-  CAC
-  TIN
-  NIN
-  WEBSITE_DEVELOPMENT
-  WEB_HOSTING
-  BRANDING
-  GRAPHICS
-  CCTV
-  CARGO_LOGISTICS
-  BUSINESS_CONSULTING
-  OTHER
-}
-
-enum ServiceDeliveryMode {
-  ONLINE
-  ONSITE
-  BOTH
-}
-
-model Service {
-
-  id                  String @id @default(cuid())
-
-  listingId           String @unique
-
-  category            ServiceCategory
-
-  deliveryMode        ServiceDeliveryMode
-
-  startingPrice       Decimal
-
-  duration            String?
-
-  turnaroundTime      String?
-
-  available           Boolean @default(true)
-
-  createdAt           DateTime @default(now())
-
-  updatedAt           DateTime @updatedAt
-
-  listing Listing @relation(
-    fields:[listingId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-  requirements ServiceRequirement[]
-
-  packages ServicePackage[]
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// SERVICE REQUIREMENTS
-//
-////////////////////////////////////////////////////////////
-
-model ServiceRequirement {
-
-  id              String @id @default(cuid())
-
-  serviceId       String
-
-  title           String
-
-  required        Boolean @default(true)
-
-  service Service @relation(
-    fields:[serviceId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// SERVICE PACKAGES
-//
-////////////////////////////////////////////////////////////
-
-model ServicePackage {
-
-  id              String @id @default(cuid())
-
-  serviceId       String
-
-  packageName     String
-
-  description     String?
-
-  price           Decimal
-
-  deliveryDays    Int?
-
-  createdAt       DateTime @default(now())
-
-  service Service @relation(
-    fields:[serviceId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// EDUCATIONAL SERVICES MODULE
-//
-////////////////////////////////////////////////////////////
-
-enum EducationCategory {
-  JAMB
-  WAEC
-  NECO
-  NABTEB
-  POST_UTME
-  ADMISSION
-  OTHER
-}
-
-model EducationService {
-
-  id                  String @id @default(cuid())
-
-  listingId           String @unique
-
-  category            EducationCategory
-
-  institution         String?
-
-  registrationFee     Decimal
-
-  processingDays      Int?
-
-  onlineAvailable     Boolean @default(true)
-
-  active              Boolean @default(true)
-
-  createdAt           DateTime @default(now())
-
-  updatedAt           DateTime @updatedAt
-
-  listing Listing @relation(
-    fields:[listingId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-  requirements EducationRequirement[]
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// EDUCATION REQUIREMENTS
-//
-////////////////////////////////////////////////////////////
-
-model EducationRequirement {
-
-  id                  String @id @default(cuid())
-
-  educationServiceId  String
-
-  title               String
-
-  required            Boolean @default(true)
-
-  createdAt           DateTime @default(now())
-
-  educationService EducationService @relation(
-    fields:[educationServiceId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// SPRINT 3
-// ORDERS & SERVICE REQUESTS
-//
-////////////////////////////////////////////////////////////
-
-enum OrderStatus {
-  PENDING
-  CONFIRMED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-  REFUNDED
-}
-
-enum PaymentStatus {
-  UNPAID
-  PAID
-  PARTIALLY_PAID
-  REFUNDED
-}
-
-model Order {
-
-  id                String @id @default(cuid())
-
-  customerId        String
-
-  listingId         String
-
-  reference         String @unique
-
-  quantity          Int @default(1)
-
-  amount            Decimal
-
-  paymentStatus     PaymentStatus
-
-  orderStatus       OrderStatus
-
-  notes             String?
-
-  createdAt         DateTime @default(now())
-
-  updatedAt         DateTime @updatedAt
-
-  customer User @relation(
-    fields:[customerId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-  listing Listing @relation(
-    fields:[listingId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-  invoices Invoice[]
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// SERVICE REQUEST
-//
-////////////////////////////////////////////////////////////
-
-enum RequestStatus {
-  NEW
-  ACCEPTED
-  PROCESSING
-  COMPLETED
-  CANCELLED
-}
-
-model ServiceRequest {
-
-  id                String @id @default(cuid())
-
-  customerId        String
-
-  serviceId         String
-
-  reference         String @unique
-
-  description       String?
-
-  status            RequestStatus
-
-  createdAt         DateTime @default(now())
-
-  updatedAt         DateTime @updatedAt
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// ESCROW ENGINE
-//
-////////////////////////////////////////////////////////////
-
-enum EscrowStatus {
-  CREATED
-  FUNDED
-  IN_PROGRESS
-  RELEASED
-  REFUNDED
-  CANCELLED
-  DISPUTED
-}
-
-model Escrow {
-
-  id                  String @id @default(cuid())
-
-  orderId             String @unique
-
-  buyerId             String
-
-  sellerId            String
-
-  amount              Decimal
-
-  platformFee         Decimal @default(0)
-
-  sellerAmount        Decimal
-
-  status              EscrowStatus
-
-  releaseDate         DateTime?
-
-  createdAt           DateTime @default(now())
-
-  updatedAt           DateTime @updatedAt
-
-  order Order @relation(
-    fields:[orderId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-  buyer User @relation(
-    name: "EscrowBuyer",
-    fields:[buyerId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-  seller User @relation(
-    name: "EscrowSeller",
-    fields:[sellerId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-  milestones EscrowMilestone[]
-
-  disputes EscrowDispute[]
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// ESCROW MILESTONES
-//
-////////////////////////////////////////////////////////////
-
-model EscrowMilestone {
-
-  id              String @id @default(cuid())
-
-  escrowId        String
-
-  title           String
-
-  description     String?
-
-  amount          Decimal
-
-  completed       Boolean @default(false)
-
-  completedAt     DateTime?
-
-  createdAt       DateTime @default(now())
-
-  escrow Escrow @relation(
-    fields:[escrowId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// ESCROW DISPUTES
-//
-////////////////////////////////////////////////////////////
-
-model EscrowDispute {
-
-  id              String @id @default(cuid())
-
-  escrowId        String
-
-  openedById      String
-
-  reason          String
-
-  resolution      String?
-
-  resolved        Boolean @default(false)
-
-  resolvedAt      DateTime?
-
-  createdAt       DateTime @default(now())
-
-  escrow Escrow @relation(
-    fields:[escrowId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// PAYMENT & INVOICE ENGINE
-//
-////////////////////////////////////////////////////////////
-
-enum PaymentMethod {
-  CARD
-  BANK_TRANSFER
-  USSD
-  WALLET
-  CASH
-}
-
-model Payment {
-
-  id                String @id @default(cuid())
-
-  orderId           String?
-
-  escrowId          String?
-
-  payerId           String
-
-  reference         String @unique
-
-  gatewayReference  String?
-
-  amount            Decimal
-
-  method            PaymentMethod
-
-  status            PaymentStatus
-
-  paidAt            DateTime?
-
-  createdAt         DateTime @default(now())
-
-  updatedAt         DateTime @updatedAt
-
-  payer User @relation(
-    fields:[payerId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// INVOICE
-//
-////////////////////////////////////////////////////////////
-
-model Invoice {
-
-  id                String @id @default(cuid())
-
-  orderId           String
-
-  invoiceNumber     String @unique
-
-  subtotal          Decimal
-
-  tax               Decimal @default(0)
-
-  discount          Decimal @default(0)
-
-  total             Decimal
-
-  paid              Boolean @default(false)
-
-  issuedAt          DateTime @default(now())
-
-  dueDate           DateTime?
-
-  pdfUrl            String?
-
-  createdAt         DateTime @default(now())
-
-  updatedAt         DateTime @updatedAt
-
-  order Order @relation(
-    fields:[orderId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// PLATFORM COMMISSION
-//
-////////////////////////////////////////////////////////////
-
-model Commission {
-
-  id                String @id @default(cuid())
-
-  orderId           String
-
-  percentage        Float
-
-  amount            Decimal
-
-  settled           Boolean @default(false)
-
-  createdAt         DateTime @default(now())
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// SPRINT 4
-// MESSAGING SYSTEM
-//
-////////////////////////////////////////////////////////////
-
-model Conversation {
-
-  id              String @id @default(cuid())
-
-  listingId       String?
-
-  createdAt       DateTime @default(now())
-
-  updatedAt       DateTime @updatedAt
-
-  participants ConversationParticipant[]
-
-  messages Message[]
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// CONVERSATION PARTICIPANTS
-//
-////////////////////////////////////////////////////////////
-
-model ConversationParticipant {
-
-  id              String @id @default(cuid())
-
-  conversationId  String
-
-  userId          String
-
-  joinedAt        DateTime @default(now())
-
-  conversation Conversation @relation(
-    fields:[conversationId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-  user User @relation(
-    fields:[userId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-  @@unique([conversationId, userId])
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// MESSAGE
-//
-////////////////////////////////////////////////////////////
-
-model Message {
-
-  id                String @id @default(cuid())
-
-  conversationId    String
-
-  senderId          String
-
-  message           String
-
-  attachmentUrl     String?
-
-  read              Boolean @default(false)
-
-  createdAt         DateTime @default(now())
-
-  conversation Conversation @relation(
-    fields:[conversationId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-  sender User @relation(
-    fields:[senderId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// ADMIN MODERATION
-//
-////////////////////////////////////////////////////////////
-
-enum ModerationStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  FLAGGED
-}
-
-model Moderation {
-
-  id              String @id @default(cuid())
-
-  listingId       String
-
-  moderatorId     String?
-
-  status          ModerationStatus
-
-  reason          String?
-
-  notes           String?
-
-  moderatedAt     DateTime?
-
-  createdAt       DateTime @default(now())
-
-  listing Listing @relation(
-    fields:[listingId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// INSPECTION BOOKINGS
-//
-////////////////////////////////////////////////////////////
-
-enum InspectionStatus {
-  REQUESTED
-  CONFIRMED
-  COMPLETED
-  CANCELLED
-}
-
-model InspectionBooking {
-
-  id                String @id @default(cuid())
-
-  listingId         String
-
-  customerId        String
-
-  assignedAgentId   String?
-
-  scheduledDate     DateTime
-
-  status            InspectionStatus
-
-  notes             String?
-
-  createdAt         DateTime @default(now())
-
-  updatedAt         DateTime @updatedAt
-
-  listing Listing @relation(
-    fields:[listingId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-  customer User @relation(
-    name: "InspectionCustomer",
-    fields:[customerId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// REPORTS
-//
-////////////////////////////////////////////////////////////
-
-model Report {
-
-  id              String @id @default(cuid())
-
-  reporterId      String
-
-  listingId       String
-
-  reason          String
-
-  description     String?
-
-  resolved        Boolean @default(false)
-
-  createdAt       DateTime @default(now())
-
-  reporter User @relation(
-    fields:[reporterId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-  listing Listing @relation(
-    fields:[listingId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// SYSTEM SETTINGS
-//
-////////////////////////////////////////////////////////////
-
-model SystemSetting {
-
-  id            String @id @default(cuid())
-
-  key           String @unique
-
-  value         String
-
-  description   String?
-
-  updatedAt     DateTime @updatedAt
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// API KEYS
-//
-////////////////////////////////////////////////////////////
-
-model ApiKey {
-
-  id              String @id @default(cuid())
-
-  service         String
-
-  keyName         String
-
-  encryptedValue  String
-
-  active          Boolean @default(true)
-
-  createdAt       DateTime @default(now())
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// AI ACTIVITY LOG
-//
-////////////////////////////////////////////////////////////
-
-model AIActivityLog {
-
-  id              String @id @default(cuid())
-
-  userId          String?
-
-  module          String
-
-  action          String
-
-  prompt          String?
-
-  response        String?
-
-  tokens          Int?
-
-  createdAt       DateTime @default(now())
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// LOGIN HISTORY
-//
-////////////////////////////////////////////////////////////
-
-model LoginHistory {
-
-  id              String @id @default(cuid())
-
-  userId          String
-
-  ipAddress       String?
-
-  userAgent       String?
-
-  successful      Boolean
-
-  createdAt       DateTime @default(now())
-
-  user User @relation(
-    fields:[userId],
-    references:[id],
-    onDelete:Cascade
-  )
-
-}
-
-////////////////////////////////////////////////////////////
-//
-// SYSTEM ANNOUNCEMENTS
-//
-////////////////////////////////////////////////////////////
-
-model Announcement {
-
-  id              String @id @default(cuid())
-
-  title           String
-
-  message         String
-
-  published       Boolean @default(false)
-
-  createdAt       DateTime @default(now())
-
-  expiresAt       DateTime?
+  property          Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
 }
