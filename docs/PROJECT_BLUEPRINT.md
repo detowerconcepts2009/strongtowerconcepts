@@ -1,269 +1,373 @@
 # STRONG TOWER CONCEPTS PLATFORM
-## Version 1.0
+## PROJECT BLUEPRINT
+### Version 2.0
+### Last Updated: 28 July 2026
 
 ---
 
 # Motto
 
-> **One Vision, Many Solutions, Endless Value**
+> One Vision, Many Solutions, Endless Value
 
 ---
 
 # Vision
 
-To become a trusted one-stop digital platform connecting individuals and businesses with reliable solutions in Property, Interior Needs, ICT Services, Cargo & Logistics, and future business innovations.
+To become Africa's leading integrated digital marketplace providing Property, ICT, Logistics, Digital Identity, Interior Solutions, and Business Services through one intelligent platform.
 
 ---
 
 # Mission
 
-To provide innovative, reliable and customer-focused services that improve lives, simplify business processes, and create lasting value.
+To simplify access to trusted services through technology while creating exceptional value for individuals, businesses, and communities.
 
 ---
 
 # PROJECT STATUS
 
+Current Stage
+
+Phase 4 — Property Marketplace Completion
+
 Overall Progress
 
-🟩🟩🟩⬜⬜⬜⬜⬜⬜⬜
+████████████████████████░░░░░░░░░░
 
-Approximately 35%
+Approximately **55%**
 
 ---
 
-# MODULE 1
-## Foundation ✅
+# MASTER ROADMAP
+
+## Phase 1 — Foundation ✅
 
 Status: COMPLETED
 
-### Completed
+Completed
 
-- Next.js Setup
+- Next.js
 - TypeScript
 - Tailwind CSS
-- GitHub Repository
-- Responsive Homepage
-- Metadata SEO
-- Loading Page
+- Git
+- GitHub
+- Responsive Layout
+- Metadata
+- Loading Screen
 - 404 Page
+- Global Layout
+- Folder Architecture
 
 ---
 
-# MODULE 2
-## UI Component Library 🚧
+## Phase 2 — Public Website ✅
+
+Status: COMPLETED
+
+Completed
+
+- Homepage
+- Hero
+- Navigation
+- Global Search
+- Marketplace Dashboard
+- Property Categories
+- Featured Properties
+- Interior Section
+- Featured Agents
+- Services
+- Why Choose Us
+- Become an Agent
+- Footer
+
+---
+
+## Phase 3 — Marketplace ✅
+
+Status: COMPLETED
+
+Completed
+
+- Property Model
+- Property Database
+- Dynamic Routing
+- Property Cards
+- Marketplace Listing
+- Dynamic Property Pages
+- Property Overview
+- Property Features
+- Listing Gallery
+- Listing Header
+- Price Tag
+- Agent Card
+- Contact Buttons
+
+Remaining Polish
+
+- Related Properties
+- Google Maps
+- Recently Viewed
+- Property Statistics
+- Mortgage Calculator
+- Save Property
+- Share Improvements
+
+---
+
+## Phase 4 — Authentication 🚧
 
 Status: IN PROGRESS
 
-### Completed
+Completed
 
-- Button
-- SectionHeader
-- PropertyCard
-- PropertyFilter
+- Login Interface
+- Register Interface
+- Forgot Password
+- Authentication Layout
+- Prisma Integration Started
 
-### Pending
+Remaining
 
-- AgentCard
-- ProductCard
-- ServiceCard
-- CargoCard
-- SearchBox
-- Modal
-- Badge
-- Pagination
-- ImageGallery
-
----
-
-# MODULE 3
-## Property Marketplace 🚧
-
-### Completed
-
-- Homepage Property Section
-- Featured Properties
-- Property Details
-- Property Filter UI
-
-### Pending
-
-- Property Search
-- Search Results
-- Image Gallery
-- Similar Properties
-- Save Property
-- Share Property
-- Property Upload
-- Agent Verification
-- Google Map
-- Contact Agent
-- Book Inspection
+- User Authentication
+- Session Management
+- Email Verification
+- Password Reset Logic
+- Google Login
+- Facebook Login
+- User Roles
+- Route Protection
 
 ---
 
-# MODULE 4
-## Interior Needs Marketplace
+## Phase 5 — Database Architecture 🚧
+
+Status: IN PROGRESS
+
+Technology
+
+- Prisma ORM
+
+Current Models
+
+- User
+- Property (in progress)
+
+Upcoming Models
+
+- Agent
+- Company
+- Vendor
+- Product
+- Cargo
+- Booking
+- Order
+- Payment
+- Review
+- Favourite
+- Notification
+- Message
+
+---
+
+## Phase 6 — Interior Marketplace
 
 Status: NOT STARTED
 
-### Products
+Products
 
 - Mattresses
 - Beds
-- Sofas
+- Furniture
 - Wardrobes
-- Dining Sets
-- Office Furniture
-- Home Decor
+- Kitchens
 - Curtains
-- Kitchen Cabinets
+- Office Furniture
+- Decorations
 
-### Pending Features
+Features
 
-- Product Listing
-- Product Details
 - Categories
+- Product Details
 - Shopping Cart
 - Wishlist
 - Vendor Dashboard
+- Checkout
 
 ---
 
-# MODULE 5
-## ICT & Business Solutions
+## Phase 7 — ICT Services
 
 Status: NOT STARTED
 
-### Services
+Services
 
 - Website Development
-- Web Hosting
-- Domain Registration
+- Mobile Apps
+- Hosting
+- Domains
 - CAC Registration
 - NIN Services
-- Graphic Design
 - Branding
-- CCTV Installation
 - Networking
+- CCTV
+- Bulk SMS
+- Business Email
 
-### Pending Features
+Features
 
-- Quote Request
-- Online Consultation
-- Service Booking
-- Service Tracking
+- Booking
+- Consultation
+- Online Payment
+- Order Tracking
 
 ---
 
-# MODULE 6
-## Cargo & Logistics
+## Phase 8 — Cargo & Logistics
 
 Status: NOT STARTED
 
-### Destinations
+Countries
 
-- United Kingdom
-- United States
+- UK
+- USA
 - Canada
 - Germany
 - Europe
 
-### Pending Features
+Features
 
 - Shipment Booking
-- Shipment Tracking
-- Cost Calculator
+- Tracking
 - Pickup Request
+- Cost Calculator
+- Delivery Status
 
 ---
 
-# MODULE 7
-## Authentication
+## Phase 9 — Dashboards
 
-Status: 60%
+Status: NOT STARTED
 
-Completed
+Customer Dashboard
 
-- Login
-- Register
-- Forgot Password
-- Auth Layout
+Agent Dashboard
 
-Pending
+Vendor Dashboard
 
-- Email Verification
-- Firebase Authentication
-- Google Login
-- Facebook Login
+Admin Dashboard
+
+Super Admin Dashboard
 
 ---
 
-# MODULE 8
-## Dashboards
+## Phase 10 — Administration
 
 Pending
 
-- Customer Dashboard
-- Agent Dashboard
-- Vendor Dashboard
-- Admin Dashboard
-
----
-
-# MODULE 9
-## Administration
-
-Pending
-
-- User Management
 - Property Approval
+- Agent Approval
 - Vendor Approval
 - Analytics
 - Reports
 - Notifications
+- Audit Logs
+- CMS
 
 ---
 
-# MODULE 10
-## Database
+## Phase 11 — Payments
+
+Pending
+
+Integration
+
+- Paystack
+- Flutterwave
+
+Features
+
+- Wallet
+- Invoice
+- Receipt
+- Transaction History
+- Refunds
+
+---
+
+## Phase 12 — AI Platform
 
 Future
 
-- Users
-- Properties
-- Products
-- Services
-- Cargo
-- Orders
-- Bookings
-- Payments
-- Favorites
-- Messages
+AI Assistant
+
+AI Property Recommendation
+
+AI Customer Support
+
+AI Service Recommendation
+
+AI Business Assistant
+
+Document Generator
 
 ---
 
-# Project Folder Structure
+# PROJECT ARCHITECTURE
 
-```
+Frontend
+
+- Next.js App Router
+- React
+- TypeScript
+- TailwindCSS
+
+Backend
+
+- Next.js Server Actions
+- Prisma ORM
+
+Database
+
+- PostgreSQL
+
+Authentication
+
+- Prisma
+- Session Based Authentication
+
+Storage
+
+- Cloudinary (planned)
+
+Payments
+
+- Paystack
+- Flutterwave
+
+Maps
+
+- Google Maps API
+
+Deployment
+
+- Vercel
+
+---
+
+# CURRENT FOLDER STRUCTURE
+
 app/
 
 components/
 
+components/marketplace/
+
 docs/
 
-public/
-
-images/
-
-properties/
-
-products/
-
-services/
-
-cargo/
-
 lib/
+
+prisma/
+
+public/
 
 hooks/
 
@@ -272,57 +376,107 @@ types/
 utils/
 
 constants/
-```
 
 ---
 
-# Development Rules
+# DEVELOPMENT RULES
 
-✔ Build reusable components
+✔ Generate complete replacement files
 
-✔ No duplicate code
+✔ Never change architecture halfway
 
-✔ Commit every major milestone
+✔ Reusable components only
 
-✔ Test every feature before moving on
+✔ Keep business logic separated
 
-✔ Keep documentation updated
+✔ Commit every completed milestone
 
----
+✔ Push every completed phase to GitHub
 
-# Development Priority
+✔ Update PROJECT_BLUEPRINT after every major milestone
 
-1. Property Marketplace
-
-2. Interior Needs Marketplace
-
-3. ICT Services
-
-4. Cargo & Logistics
-
-5. Dashboard
-
-6. Backend
-
-7. Mobile App
+✔ Test before moving to the next phase
 
 ---
 
-# Long-Term Vision
+# GITHUB WORKFLOW
 
-Strong Tower Concepts will become an integrated digital solutions platform where users can:
+Development
 
-🏠 Buy, Sell, Rent and Lease Properties
+git add .
 
-🛋 Shop Interior Products
+git commit -m "Describe milestone"
 
-💻 Request ICT & Business Services
+git push origin main
 
-📦 Book International Cargo Services
+Office Computer
 
-through one trusted platform.
+git pull origin main
 
 ---
 
-Last Updated:
-16 July 2026
+# LONG TERM VISION
+
+Strong Tower Concepts will become a multi-service digital ecosystem where users can:
+
+🏠 Buy, Sell and Rent Properties
+
+🛋 Purchase Interior Products
+
+💻 Request ICT Services
+
+📦 Book International Cargo
+
+🆔 Process Digital Identity Services
+
+🏢 Register Businesses
+
+🌐 Purchase Hosting & Domains
+
+🤖 Receive AI Assistance
+
+through one unified platform.
+
+---
+
+# NEXT DEVELOPMENT TARGET
+
+Complete Property Marketplace
+
+↓
+
+Authentication Backend
+
+↓
+
+Agent Dashboard
+
+↓
+
+Admin Dashboard
+
+↓
+
+Interior Marketplace
+
+↓
+
+ICT Services
+
+↓
+
+Cargo Platform
+
+↓
+
+Payments
+
+↓
+
+AI Integration
+
+---
+
+Project Target Completion
+
+**End of August 2026**
