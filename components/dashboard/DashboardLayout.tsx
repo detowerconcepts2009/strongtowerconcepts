@@ -3,6 +3,7 @@
 import { ReactNode } from "react";
 import DashboardSidebar from "./DashboardSidebar";
 import DashboardHeader from "./DashboardHeader";
+import { DashboardProvider } from "./context/DashboardContext";
 
 interface DashboardLayoutProps {
   title: string;
@@ -14,24 +15,27 @@ export default function DashboardLayout({
   children,
 }: DashboardLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-100">
+    <DashboardProvider>
 
-      <DashboardSidebar />
+      <div className="min-h-screen bg-gray-100">
 
-      <div className="lg:ml-72">
+        <DashboardSidebar />
 
-        <DashboardHeader
-          title={title}
-        />
+        <div className="lg:ml-72">
 
-        <main className="p-6">
+          <DashboardHeader
+            title={title}
+            userName="Strong Tower User"
+          />
 
-          {children}
+          <main className="p-6">
+            {children}
+          </main>
 
-        </main>
+        </div>
 
       </div>
 
-    </div>
+    </DashboardProvider>
   );
 }

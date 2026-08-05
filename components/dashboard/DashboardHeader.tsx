@@ -1,60 +1,140 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
-  FaBell,
-  FaSearch,
-  FaUserCircle,
-} from "react-icons/fa";
+  Bell,
+  Menu,
+  Search,
+  UserCircle2,
+} from "lucide-react";
+
+import { useDashboard } from "./context/DashboardContext";
 
 interface DashboardHeaderProps {
   title: string;
+}
+
+interface UserProfile {
+  fullName: string;
+  role: string;
 }
 
 export default function DashboardHeader({
   title,
 }: DashboardHeaderProps) {
 
+  const { openSidebar } = useDashboard();
+
+  const [user, setUser] = useState<UserProfile>({
+    fullName: "Loading...",
+    role: "",
+  });
+
+  useEffect(() => {
+
+    async function loadUser() {
+
+      try {
+
+        const response =
+          await fetch("/api/user/me");
+
+        const data =
+          await response.json();
+
+        if (data.success) {
+
+          setUser({
+            fullName: data.user.fullName,
+            role: data.user.role,
+          });
+
+        }
+
+      } catch (error) {
+
+        console.error(error);
+
+      }
+
+    }
+
+    loadUser();
+
+  }, []);
+
   return (
 
-    <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-white px-8 py-5 shadow-sm">
+    <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-white px-4 py-4 shadow-sm md:px-8">
 
-      <div>
+      <div className="flex items-center gap-4">
 
-        <h1 className="text-3xl font-bold text-blue-950">
-          {title}
-        </h1>
+        <button
+          onClick={openSidebar}
+          className="rounded-lg p-2 hover:bg-slate-100 lg:hidden"
+        >
+          <Menu size={24} />
+        </button>
 
-        <p className="mt-1 text-sm text-gray-500">
-          Welcome back to Strong Tower Concepts.
-        </p>
+        <div>
+
+          <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">
+            {title}
+          </h1>
+
+          <p className="hidden text-sm text-slate-500 md:block">
+            Welcome back to Strong Tower Concepts.
+          </p>
+
+        </div>
 
       </div>
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-3 md:gap-6">
 
-        <div className="relative">
+        <div className="relative hidden lg:block">
+
+          <Search
+            size={18}
+            className="absolute left-4 top-3.5 text-slate-400"
+          />
 
           <input
             type="text"
             placeholder="Search..."
-            className="w-72 rounded-xl border px-12 py-3 outline-none focus:border-blue-900"
+            className="w-72 rounded-xl border border-slate-200 py-3 pl-11 pr-4 outline-none focus:border-blue-700"
           />
-
-          <FaSearch className="absolute left-4 top-4 text-gray-400" />
 
         </div>
 
-        <button className="relative">
+        <button className="relative rounded-lg p-2 hover:bg-slate-100">
 
-          <FaBell className="text-2xl text-blue-950" />
+          <Bell size={23} />
 
-          <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs text-white">
-            3
-          </span>
+          <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-600" />
 
         </button>
 
-        <FaUserCircle className="text-4xl text-blue-950" />
+        <div className="flex items-center gap-3">
+
+          <UserCircle2
+            size={42}
+            className="text-blue-900"
+          />
+
+          <div className="hidden lg:block">
+
+            <p className="font-semibold">
+              {user.fullName}
+            </p>
+
+            <p className="text-xs uppercase text-slate-500">
+              {user.role}
+            </p>
+
+          </div>
+
+        </div>
 
       </div>
 
