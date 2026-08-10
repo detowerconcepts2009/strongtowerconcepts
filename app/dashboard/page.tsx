@@ -1,13 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import DashboardCards from "@/components/dashboard/DashboardCards";
+import WelcomeCard from "@/components/dashboard/WelcomeCard";
 
 interface DashboardStats {
   walletBalance: number;
   properties: number;
   businesses: number;
+  listings: number;
   messages: number;
+}
+
+interface DashboardUser {
+  firstName: string;
 }
 
 export default function DashboardPage() {
@@ -17,7 +25,13 @@ export default function DashboardPage() {
       walletBalance: 0,
       properties: 0,
       businesses: 0,
+      listings: 0,
       messages: 0,
+    });
+
+  const [user, setUser] =
+    useState<DashboardUser>({
+      firstName: "",
     });
 
   const [loading, setLoading] =
@@ -29,27 +43,52 @@ export default function DashboardPage() {
 
       try {
 
-        const response =
-          await fetch("/api/dashboard/stats");
+        const [
+          statsResponse,
+          userResponse,
+        ] = await Promise.all([
+          fetch("/api/dashboard/stats"),
+          fetch("/api/user/me"),
+        ]);
 
-        const result =
-          await response.json();
+        const statsResult =
+          await statsResponse.json();
 
-if (result.success) {
+        const userResult =
+          await userResponse.json();
 
-  setStats({
+        if (statsResult.success) {
 
-    walletBalance: Number(result.stats.walletBalance),
+          setStats({
 
-    properties: result.stats.properties,
+            walletBalance: Number(
+              statsResult.stats.walletBalance
+            ),
 
-    businesses: result.stats.businesses,
+            properties:
+              statsResult.stats.properties,
 
-    messages: result.stats.messages,
+            businesses:
+              statsResult.stats.businesses,
 
-  });
+            listings:
+              statsResult.stats.listings,
 
-}
+            messages:
+              statsResult.stats.messages,
+
+          });
+
+        }
+
+        if (userResult.success) {
+
+          setUser({
+            firstName:
+              userResult.user.firstName,
+          });
+
+        }
 
       } catch (error) {
 
@@ -73,105 +112,37 @@ if (result.success) {
       title="Dashboard"
     >
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+      <DashboardCards
 
-        {/* Wallet */}
+        walletBalance={
+          loading
+            ? 0
+            : stats.walletBalance
+        }
 
-        <div className="bg-white rounded-2xl shadow-sm p-6">
+        properties={
+          loading
+            ? 0
+            : stats.properties
+        }
 
-          <p className="text-slate-500 text-sm">
-            Wallet Balance
-          </p>
+        businesses={
+          loading
+            ? 0
+            : stats.businesses
+        }
 
-          <h2 className="mt-2 text-3xl font-bold">
+        messages={
+          loading
+            ? 0
+            : stats.messages
+        }
 
-            {
-              loading
-                ? "Loading..."
-                : `₦${stats.walletBalance.toLocaleString()}`
-            }
+      />
 
-          </h2>
-
-        </div>
-
-        {/* Properties */}
-
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-
-          <p className="text-slate-500 text-sm">
-            Properties
-          </p>
-
-          <h2 className="mt-2 text-3xl font-bold">
-
-            {
-              loading
-                ? "Loading..."
-                : stats.properties
-            }
-
-          </h2>
-
-        </div>
-
-        {/* Businesses */}
-
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-
-          <p className="text-slate-500 text-sm">
-            Businesses
-          </p>
-
-          <h2 className="mt-2 text-3xl font-bold">
-
-            {
-              loading
-                ? "Loading..."
-                : stats.businesses
-            }
-
-          </h2>
-
-        </div>
-
-        {/* Messages */}
-
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-
-          <p className="text-slate-500 text-sm">
-            Messages
-          </p>
-
-          <h2 className="mt-2 text-3xl font-bold">
-
-            {
-              loading
-                ? "Loading..."
-                : stats.messages
-            }
-
-          </h2>
-
-        </div>
-
-      </div>
-
-      <div className="mt-8 bg-white rounded-2xl shadow-sm p-8">
-
-        <h2 className="text-2xl font-bold">
-
-          Welcome to Strong Tower Concepts
-
-        </h2>
-
-        <p className="mt-4 text-slate-600">
-
-          Your dashboard is now powered by live data from the backend.
-
-        </p>
-
-      </div>
+      <WelcomeCard
+        firstName={user.firstName}
+      />
 
     </DashboardLayout>
 

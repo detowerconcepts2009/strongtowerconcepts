@@ -1,197 +1,193 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
+
 import {
-  LayoutDashboard,
-  House,
-  BriefcaseBusiness,
-  Wallet,
-  MessageSquare,
-  UserCircle,
-  Settings,
-  LogOut,
-  X,
-} from "lucide-react";
+  FaHome,
+  FaBuilding,
+  FaCar,
+  FaCouch,
+  FaUsers,
+  FaClipboardCheck,
+  FaGift,
+  FaCog,
+  FaSignOutAlt,
+  FaTimes,
+} from "react-icons/fa";
 
 import { useDashboard } from "./context/DashboardContext";
 
-const menuItems = [
+const menus = [
   {
-    title: "Dashboard",
+    name: "Dashboard",
+    icon: FaHome,
     href: "/dashboard",
-    icon: LayoutDashboard,
   },
   {
-    title: "Properties",
+    name: "Properties",
+    icon: FaBuilding,
     href: "/dashboard/properties",
-    icon: House,
   },
   {
-    title: "Marketplace",
-    href: "/dashboard/marketplace",
-    icon: BriefcaseBusiness,
+    name: "Vehicles",
+    icon: FaCar,
+    href: "/dashboard/vehicles",
   },
   {
-    title: "Wallet",
-    href: "/dashboard/wallet",
-    icon: Wallet,
+    name: "Furniture",
+    icon: FaCouch,
+    href: "/dashboard/furniture",
   },
   {
-    title: "Messages",
-    href: "/dashboard/messages",
-    icon: MessageSquare,
+    name: "Users",
+    icon: FaUsers,
+    href: "/dashboard/users",
   },
   {
-    title: "Profile",
-    href: "/dashboard/profile",
-    icon: UserCircle,
+    name: "Inspections",
+    icon: FaClipboardCheck,
+    href: "/dashboard/inspections",
   },
   {
-    title: "Settings",
+    name: "Vouchers",
+    icon: FaGift,
+    href: "/dashboard/vouchers",
+  },
+  {
+    name: "Settings",
+    icon: FaCog,
     href: "/dashboard/settings",
-    icon: Settings,
   },
 ];
 
 export default function DashboardSidebar() {
-  const pathname = usePathname();
+
+  const router = useRouter();
 
   const {
     sidebarOpen,
     closeSidebar,
   } = useDashboard();
 
+  async function handleLogout() {
+
+    await fetch("/api/auth/logout", {
+      method: "POST",
+    });
+
+    router.replace("/login");
+
+    router.refresh();
+
+  }
+
   return (
     <>
+
       {/* Mobile Overlay */}
 
       {sidebarOpen && (
+
         <div
           onClick={closeSidebar}
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"
         />
+
       )}
 
       {/* Sidebar */}
 
       <aside
-        className={`
-          fixed
-          left-0
-          top-0
-          z-50
-          h-screen
-          w-72
-          bg-[#071A35]
-          text-white
-          flex
-          flex-col
-          transform
-          transition-transform
-          duration-300
-          lg:translate-x-0
-          ${
-            sidebarOpen
-              ? "translate-x-0"
-              : "-translate-x-full"
-          }
-        `}
+        className={`fixed left-0 top-0 z-50 flex h-screen w-72 flex-col overflow-y-auto bg-blue-950 text-white transition-transform duration-300
+
+        ${
+          sidebarOpen
+            ? "translate-x-0"
+            : "-translate-x-full"
+        }
+
+        lg:translate-x-0`}
       >
+
         {/* Mobile Close Button */}
 
-        <div className="absolute right-4 top-4 lg:hidden">
+        <div className="flex justify-end p-4 lg:hidden">
+
           <button
             onClick={closeSidebar}
-            className="rounded-lg p-2 hover:bg-white/10"
+            className="rounded-lg p-2 hover:bg-blue-800"
           >
-            <X size={24} />
+
+            <FaTimes size={20} />
+
           </button>
+
         </div>
 
         {/* Logo */}
 
-        <div className="border-b border-white/10 p-7">
-          <Image
-            src="/images/logo/stc-logo.png"
-            alt="STC"
-            width={70}
-            height={70}
-            priority
-            className="h-auto w-auto"
-          />
+        <div className="border-b border-blue-800 p-6">
 
-          <h2 className="mt-6 text-4xl font-bold leading-tight">
+          <h1 className="text-2xl font-bold">
             Strong Tower
-          </h2>
+          </h1>
 
-          <p className="text-blue-200">
-            Concepts
+          <p className="mt-1 text-sm text-blue-200">
+            Dealer Dashboard
           </p>
+
         </div>
 
-        {/* Navigation */}
+        {/* Menu */}
 
-        <nav className="flex-1 space-y-2 p-4">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
+        <nav className="flex-1 p-4">
 
-            const active =
-              pathname === item.href;
+          {menus.map((menu) => {
+
+            const Icon = menu.icon;
 
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={closeSidebar}
-                className={`
-                  flex
-                  items-center
-                  gap-4
-                  rounded-xl
-                  px-5
-                  py-4
-                  transition
-                  ${
-                    active
-                      ? "bg-blue-700"
-                      : "hover:bg-white/10"
-                  }
-                `}
-              >
-                <Icon size={22} />
 
-                <span className="font-medium">
-                  {item.title}
-                </span>
+              <Link
+                key={menu.name}
+                href={menu.href}
+                onClick={closeSidebar}
+                className="mb-2 flex items-center gap-4 rounded-xl px-4 py-3 transition hover:bg-blue-800"
+              >
+
+                <Icon className="text-lg" />
+
+                <span>{menu.name}</span>
+
               </Link>
+
             );
+
           })}
+
         </nav>
 
         {/* Logout */}
 
-        <div className="border-t border-white/10 p-4">
+        <div className="border-t border-blue-800 p-4">
+
           <button
-            className="
-              flex
-              w-full
-              items-center
-              gap-4
-              rounded-xl
-              px-5
-              py-4
-              transition
-              hover:bg-red-600
-            "
+            onClick={handleLogout}
+            className="flex w-full items-center gap-4 rounded-xl px-4 py-3 transition hover:bg-red-700"
           >
-            <LogOut size={22} />
+
+            <FaSignOutAlt />
 
             Logout
+
           </button>
+
         </div>
+
       </aside>
+
     </>
   );
+
 }
