@@ -1,21 +1,29 @@
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
-import { withAccelerate } from "@prisma/extension-accelerate";
 
 declare global {
-  var prisma: ReturnType<typeof createPrismaClient> | undefined;
+  var prisma: PrismaClient | undefined;
 }
 
-function createPrismaClient() {
-  return new PrismaClient({
-    accelerateUrl: process.env.DATABASE_URL!,
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error("Missing DATABASE_URL");
+}
+
+const adapter = new PrismaPg({
+  connectionString,
+});
+
+const prisma =
+  global.prisma ??
+  new PrismaClient({
+    adapter,
     log:
       process.env.NODE_ENV === "development"
         ? ["query", "warn", "error"]
         : ["error"],
-  }).$extends(withAccelerate());
-}
-
-const prisma = global.prisma ?? createPrismaClient();
+  });
 
 if (process.env.NODE_ENV !== "production") {
   global.prisma = prisma;

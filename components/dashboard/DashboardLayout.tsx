@@ -16,26 +16,15 @@ export default function DashboardLayout({
 }: DashboardLayoutProps) {
   return (
     <DashboardProvider>
-
       <div className="min-h-screen bg-gray-100">
-
         <DashboardSidebar />
 
         <div className="lg:ml-72">
+          <DashboardHeader title={title} />
 
-          <DashboardHeader
-            title={title}
-            userName="Strong Tower User"
-          />
-
-          <main className="p-6">
-            {children}
-          </main>
-
+          <main className="p-6">{children}</main>
         </div>
-
       </div>
-
     </DashboardProvider>
   );
 }

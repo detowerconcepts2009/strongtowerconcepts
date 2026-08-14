@@ -1,38 +1,30 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
-export async function POST(request: NextRequest) {
-
+export async function POST() {
   try {
+    const user = await getCurrentUser();
 
-    const body = await request.json();
-
-    const { userId } = body;
-
-    if (!userId) {
-
+    if (!user) {
       return NextResponse.json(
         {
           success: false,
-          message: "User ID is required.",
+          message: "Unauthorized.",
         },
         {
-          status: 400,
+          status: 401,
         }
       );
-
     }
 
     const existingWallet = await prisma.wallet.findUnique({
-
       where: {
-        userId,
+        userId: user.id,
       },
-
     });
 
     if (existingWallet) {
-
       return NextResponse.json(
         {
           success: true,
@@ -43,36 +35,27 @@ export async function POST(request: NextRequest) {
           status: 200,
         }
       );
-
     }
 
-    const wallet = await prisma.wallet.create({
+    const wallet = await prisma.$transaction(async (tx) => {
+      const newWallet = await tx.wallet.create({
+        data: {
+          userId: user.id,
+          balance: 1000,
+        },
+      });
 
-      data: {
+      await tx.walletTransaction.create({
+        data: {
+          walletId: newWallet.id,
+          reference: `WELCOME-${Date.now()}-${user.id}`,
+          type: "DEPOSIT",
+          status: "SUCCESS",
+          amount: 1000,
+        },
+      });
 
-        userId,
-
-        balance: 1000,
-
-      },
-
-    });
-        await prisma.walletTransaction.create({
-
-      data: {
-
-        walletId: wallet.id,
-
-        reference: `WELCOME-${Date.now()}`,
-
-        type: "DEPOSIT",
-
-        status: "SUCCESS",
-
-        amount: 1000,
-
-      },
-
+      return newWallet;
     });
 
     return NextResponse.json(
@@ -85,21 +68,17 @@ export async function POST(request: NextRequest) {
         status: 201,
       }
     );
-
   } catch (error) {
-
-    console.error(error);
+    console.error("Wallet creation error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message: "Internal Server Error.",
+        message: "Unable to create wallet.",
       },
       {
         status: 500,
       }
     );
-
   }
-
 }

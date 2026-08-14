@@ -125,19 +125,32 @@ export default function DashboardSidebar() {
 
         </div>
 
-        {/* Logo */}
+       {/* Logo */}
 
-        <div className="border-b border-blue-800 p-6">
+<div className="border-b border-blue-800 p-6">
 
-          <h1 className="text-2xl font-bold">
-            Strong Tower
-          </h1>
+  <Link
+    href="/dashboard"
+    className="flex items-center gap-3"
+  >
+    <img
+      src="/images/logo/stc-logo.png"
+      alt="Strong Tower Concepts"
+      className="h-14 w-14 object-contain"
+    />
 
-          <p className="mt-1 text-sm text-blue-200">
-            Dealer Dashboard
-          </p>
+    <div>
+      <h1 className="text-lg font-bold">
+        Strong Tower
+      </h1>
 
-        </div>
+      <p className="text-sm text-blue-200">
+        Dealer Dashboard
+      </p>
+    </div>
+  </Link>
+
+</div>
 
         {/* Menu */}
 

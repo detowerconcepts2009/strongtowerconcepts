@@ -13,8 +13,9 @@ export default function Logo() {
         width={70}
         height={70}
         priority
-        className="w-auto h-16 object-contain"
-      />
+        className="object-contain"
+        style={{ width: "70px", height: "70px" }}
+        />
 
       <div className="leading-none">
 

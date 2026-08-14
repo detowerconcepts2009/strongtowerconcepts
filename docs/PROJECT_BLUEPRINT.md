@@ -1,7 +1,10 @@
 # STRONG TOWER CONCEPTS PLATFORM
+
 ## PROJECT BLUEPRINT
-### Version 3.0
-Last Updated: 28 July 2026
+
+### Version 4.1
+
+Last Updated: 14 August 2026
 
 ---
 
@@ -25,374 +28,765 @@ To simplify everyday business and lifestyle needs through one secure, reliable a
 
 # CURRENT PROJECT STATUS
 
-Overall Progress
+Overall Status:
 
-████████░░
+BACKEND FOUNDATION OPERATIONAL
 
-Estimated Completion:
-80%
+Current Development Focus:
 
-Current Phase:
-Backend Foundation & Authentication
+Authentication, Dashboard & Wallet Backend
 
 Target Completion:
+
 End of August 2026
+
+Recent Progress:
+
+* Prisma migration history successfully reconciled
+* Identity document database foundation added
+* Notification database foundation added
+* Prisma Client regenerated successfully
+* Database migration status confirmed up to date
+* Next.js development server confirmed operational
+* Property placeholder image issue resolved
+* Logo image aspect-ratio warnings resolved
+* Mobile navigation Login visibility issue identified and pending correction
+
+Important:
+
+The latest changes have been runtime-tested through the development server, but `npm run build` has not yet been rerun after the latest changes. Therefore the latest database/UI changes are not yet marked as production-build verified.
 
 ---
 
-# PROJECT MODULES
+# VERIFIED COMPLETED MILESTONES
+
+The following milestones have been completed and tested successfully:
+
+* Next.js application foundation
+* App Router
+* TypeScript
+* Tailwind CSS
+* Responsive UI foundation
+* GitHub repository
+* Project documentation
+* SEO metadata
+* Loading UI
+* 404 page
+* Reusable UI component library
+* Property marketplace frontend
+* Dynamic property routes
+* Property details frontend
+* Property gallery
+* Property documents UI
+* Property location UI
+* Similar properties UI
+* Agent profile UI
+* Save listing UI
+* Inspection booking UI
+* Authentication pages
+* Registration frontend
+* Login frontend
+* Forgot-password frontend
+* Authentication layout
+* Prisma/PostgreSQL architecture
+* Prisma architecture audit
+* Prisma client configuration corrected for Prisma 7
+* PostgreSQL connection configuration corrected
+* Production Prisma client successfully builds
+* User model
+* Wallet model
+* Wallet transaction model
+* Property model
+* Property feature model
+* Property document model
+* Property inspection model
+* Listing model
+* Listing image model
+* Favorite model
+* Review model
+* BusinessPage model
+* IdentityDocument model
+* Notification model
+* Prisma relationships and constraints reviewed
+* Cloudflare R2 account configured
+* R2 bucket created
+* R2 API token created
+* R2 credentials configured through environment variables
+* AWS S3 SDK installed
+* R2 image upload integration
+* R2 public development URL enabled
+* Profile image upload/storage working
+* Profile image displayed successfully after refresh
+* User profile API
+* Dashboard statistics API
+* Dashboard user data integration
+* Dashboard statistics connected to live database data
+* Wallet balance displayed from database
+* Property count displayed from database
+* Business count displayed from database
+* Listing count displayed from database
+* Dashboard Listings card integrated
+* Prisma migration history reconciled
+* Identity document migration successfully applied
+* Notification migration successfully applied
+* Prisma database status confirmed up to date
+* Prisma Client regenerated successfully
+* Next.js development server successfully starts
+* Property placeholder image issue resolved
+* Logo image aspect-ratio warnings resolved
 
 ---
 
 # MODULE 1
-## Foundation
+
+## FOUNDATION
 
 Status:
+
 ✅ COMPLETED
 
-Completed
+Completed:
 
-- Next.js 15
-- App Router
-- TypeScript
-- Tailwind CSS
-- Responsive Design
-- GitHub Repository
-- Project Documentation
-- SEO Metadata
-- Loading UI
-- 404 Page
+* Next.js
+* App Router
+* TypeScript
+* Tailwind CSS
+* Responsive Design
+* GitHub Repository
+* Project Documentation
+* SEO Metadata
+* Loading UI
+* 404 Page
 
 ---
 
 # MODULE 2
-## UI Component Library
+
+## UI COMPONENT LIBRARY
 
 Status:
+
 ✅ COMPLETED
 
-Completed
+Completed:
 
-- Button
-- SectionHeader
-- PropertyCard
-- PropertyFilter
-- AgentCard
-- ContactButtons
-- ListingGallery
-- ListingHeader
-- PriceTag
-- PropertyOverview
-- PropertyFeatures
-- PropertyStats
-- PropertyDocuments
-- PropertyLocation
-- SimilarProperties
-- SaveListing
-- ScheduleInspection
-- ShareButtons
+* Button
+* SectionHeader
+* PropertyCard
+* PropertyFilter
+* AgentCard
+* ContactButtons
+* ListingGallery
+* ListingHeader
+* PriceTag
+* PropertyOverview
+* PropertyFeatures
+* PropertyStats
+* PropertyDocuments
+* PropertyLocation
+* SimilarProperties
+* SaveListing
+* ScheduleInspection
+* ShareButtons
+* DashboardLayout
+* DashboardCards
+* WelcomeCard
 
-Future Enhancements
+Future Enhancements:
 
-- Image Lightbox
-- Advanced Gallery
-- Skeleton Loaders
+* Image Lightbox
+* Advanced Gallery
+* Skeleton Loaders
 
 ---
 
 # MODULE 3
-## Property Marketplace
+
+## PROPERTY MARKETPLACE
 
 Status:
-✅ FRONTEND COMPLETE
 
-Completed
+🟢 FRONTEND COMPLETE
+🟡 BACKEND IN PROGRESS
 
-- Marketplace Homepage
-- Property Listings
-- Dynamic Property Details
-- Property Gallery
-- Dynamic Routing
-- Property Statistics
-- Similar Properties
-- Agent Profile
-- Contact Buttons
-- Property Documents
-- Property Location
-- Share Listing
-- Save Listing UI
-- Inspection Booking UI
+Completed:
 
-Pending Backend Integration
+* Marketplace Homepage
+* Property Listings
+* Dynamic Property Details
+* Property Gallery
+* Dynamic Routing
+* Property Statistics
+* Similar Properties
+* Agent Profile
+* Contact Buttons
+* Property Documents
+* Property Location
+* Share Listing
+* Save Listing UI
+* Inspection Booking UI
+* Property database models
+* Listing database models
+* Listing image model
+* Property document model
+* Property inspection model
+* Property placeholder image issue resolved
 
-- Google Maps API
-- Save Property Logic
-- Inspection Booking Logic
-- Property Search API
-- Property Upload
-- Agent Verification Workflow
+Pending Backend:
+
+* Property Search API
+* Property Upload
+* Save Property Logic
+* Inspection Booking Logic
+* Google Maps API
+* Agent Verification Workflow
 
 ---
 
 # MODULE 4
-## Interior Marketplace
+
+## INTERIOR MARKETPLACE
 
 Status:
-UI STARTED
 
-Categories
+🟡 UI STARTED
 
-- Mattresses
-- Beds
-- Sofas
-- Dining
-- Office Furniture
-- Curtains
-- Home Decor
+Categories:
 
-Pending
+* Mattresses
+* Beds
+* Sofas
+* Dining
+* Office Furniture
+* Curtains
+* Home Decor
 
-- Product Database
-- Vendor Dashboard
-- Shopping Cart
-- Orders
-- Checkout
+Pending:
+
+* Product Database
+* Product Models
+* Vendor Dashboard
+* Shopping Cart
+* Orders
+* Checkout
 
 ---
 
 # MODULE 5
-## ICT & Business Services
+
+## ICT & BUSINESS SERVICES
 
 Status:
-Planning Complete
 
-Services
+🟡 PLANNING COMPLETE
 
-- Website Development
-- Web Hosting
-- Domain Registration
-- CAC Registration
-- Branding
-- CCTV
-- Networking
-- NIN Services
+Services:
 
-Pending
+* Website Development
+* Web Hosting
+* Domain Registration
+* CAC Registration
+* Branding
+* CCTV
+* Networking
+* NIN Services
 
-- Booking System
-- Quote Requests
-- Service Orders
+Pending:
+
+* Service Database
+* Booking System
+* Quote Requests
+* Service Orders
 
 ---
 
 # MODULE 6
-## Cargo & Logistics
+
+## CARGO & LOGISTICS
 
 Status:
-Planning Complete
 
-Modules
+🟡 PLANNING COMPLETE
 
-- Shipment Booking
-- Tracking
-- Pickup Request
-- Cost Calculator
+Modules:
 
-Destinations
+* Shipment Booking
+* Tracking
+* Pickup Request
+* Cost Calculator
 
-- UK
-- USA
-- Canada
-- Germany
-- Europe
+Destinations:
+
+* UK
+* USA
+* Canada
+* Germany
+* Europe
+
+Pending:
+
+* Logistics Database
+* Shipment Booking Backend
+* Tracking Backend
+* Cost Calculation Engine
 
 ---
 
 # MODULE 7
-## Authentication
+
+## AUTHENTICATION
 
 Status:
-Frontend Complete
 
-Completed
+🟢 BACKEND FOUNDATION COMPLETE
+🟡 SECURITY HARDENING IN PROGRESS
 
-- Login Page
-- Register Page
-- Forgot Password
-- Authentication Layout
+Completed:
 
-Pending
+* Login Page
+* Register Page
+* Forgot Password
+* Authentication Layout
+* Registration API
+* Login API
+* Logout API
+* Password hashing
+* User creation
+* User lookup
+* User profile API
+* Session/authentication foundation
 
-- Register Backend
-- Login Backend
-- Sessions
-- Password Hashing
-- Logout
-- Email Verification
-- Protected Routes
-- Role Authorization
+Pending:
+
+* Email Verification Workflow
+* Protected Route Middleware
+* Role Authorization Middleware
+* Session Security Review
+* Authentication Error Handling Audit
+* Password Reset Backend
+* Account Status Enforcement
+* Unauthorized access testing
+
+UI Issue Identified:
+
+* Mobile navigation currently does not display the Login option even though other navigation items are visible.
 
 ---
 
 # MODULE 8
-## Wallet System
+
+## WALLET SYSTEM
 
 Status:
-Database Designed
 
-Completed
+🟢 DATABASE FOUNDATION COMPLETE
+🟡 BACKEND IMPLEMENTATION IN PROGRESS
 
-- Wallet Prisma Model
-- Wallet Transaction Model
-- Transaction Types
-- Transaction Status
-- User ↔ Wallet Relationship
+Completed:
 
-Pending
+* Wallet Prisma Model
+* Wallet Transaction Model
+* Transaction Types
+* Transaction Status
+* User ↔ Wallet Relationship
+* Wallet balance API/dashboard integration
+* Wallet balance displayed on dashboard
 
-- Wallet Dashboard
-- Welcome Bonus Logic
-- Wallet Funding
-- Wallet Transfers
-- Wallet History
-- Transaction Ledger
-- Payment Integration
+Pending:
+
+* Wallet Dashboard
+* Wallet Funding
+* Welcome Bonus
+* Wallet Transfers
+* Wallet History
+* Transaction Ledger
+* Payment Integration
+* Refund Processing
+* Withdrawal Processing
+* Transaction Security
+* Idempotency Protection
 
 ---
 
 # MODULE 9
-## Dashboards
+
+## DASHBOARDS
 
 Status:
-Planning Complete
 
-Customer Dashboard
+🟢 CUSTOMER DASHBOARD FOUNDATION COMPLETE
+🟡 DASHBOARD BACKEND EXPANSION IN PROGRESS
 
-- Wallet
-- Saved Properties
-- Bookings
-- Orders
+Customer Dashboard Completed:
 
-Agent Dashboard
+* Dashboard Layout
+* Welcome Card
+* Wallet Balance
+* Property Count
+* Business Count
+* Listing Count
+* Messages placeholder
+* Live dashboard statistics API
+* User profile integration
+* Profile image integration
 
-- Property Management
-- Inspection Requests
-- Leads
-- Earnings
+Customer Dashboard Pending:
 
-Vendor Dashboard
+* Saved Properties
+* Bookings
+* Orders
+* Transaction History
+* Wallet Funding
+* Notifications
+* Messages
 
-- Product Management
-- Orders
-- Sales
+Agent Dashboard:
 
-Admin Dashboard
+🟡 PENDING
 
-- User Management
-- Analytics
-- Platform Monitoring
+Planned:
+
+* Property Management
+* Inspection Requests
+* Leads
+* Earnings
+
+Vendor Dashboard:
+
+🟡 PENDING
+
+Planned:
+
+* Product Management
+* Orders
+* Sales
+
+Admin Dashboard:
+
+🟡 PENDING
+
+Planned:
+
+* User Management
+* Analytics
+* Platform Monitoring
+* Verification Management
 
 ---
 
 # MODULE 10
-## Database (Prisma)
+
+## DATABASE / PRISMA
 
 Status:
-Architecture Designed
 
-Completed Models
+🟢 ARCHITECTURE AUDITED
+🟢 MIGRATIONS SYNCHRONIZED
+🟡 PRODUCTION BUILD VERIFICATION PENDING AFTER LATEST CHANGES
 
-- User
-- Wallet
-- WalletTransaction
-- Property
-- PropertyFeature
-- PropertyDocument
-- PropertyInspection
-- Listing
-- ListingImage
-- Favorite
-- Review
-- BusinessPage
+Completed:
 
-Next Audit
+* PostgreSQL
+* Prisma ORM
+* Prisma 7 configuration
+* Prisma Client
+* User
+* Wallet
+* WalletTransaction
+* Property
+* PropertyFeature
+* PropertyDocument
+* PropertyInspection
+* Listing
+* ListingImage
+* Favorite
+* Review
+* BusinessPage
+* IdentityDocument
+* Notification
+* Relationships
+* Constraints
+* Unique fields
+* Cascading deletes
+* Index review
+* Environment configuration
+* Migration history reconciliation
+* Identity document migration
+* Notification migration
+* Prisma Client regeneration
+* Database status confirmed up to date
 
-- Relationships
-- Constraints
-- Indexes
-- Audit Fields
-- Performance Review
+Important:
+
+The database migration history was successfully reconciled after resolving schema drift involving the existing `profileImageUrl` column.
+
+The database currently reports:
+
+`Database schema is up to date!`
+
+Future Database Work:
+
+* Query performance review
+* Additional indexes where justified
+* Audit fields where required
+* Messaging models
+* Payment models
+* Order models
+* Verification models
+* Logistics models
+* Interior marketplace models
 
 ---
 
 # MODULE 11
-## Payments
 
-Planned
+## CLOUD STORAGE / MEDIA
 
-- Paystack
-- Flutterwave
-- Wallet Payments
-- Transaction Records
-- Refunds
+Status:
+
+🟢 COMPLETED FOR PROFILE MEDIA
+🟡 EXPANSION PENDING
+
+Completed:
+
+* Cloudflare R2 account
+* R2 subscription activation
+* R2 bucket
+* R2 API token
+* S3-compatible SDK
+* Environment credentials
+* Public development URL
+* Profile image upload
+* Profile image storage
+* Profile image retrieval
+* Profile image display
+* Property placeholder image issue resolved
+* Logo image warning cleanup
+
+R2 Bucket:
+
+strongtowerconcepts-media
+
+Pending:
+
+* Listing image uploads
+* Property document uploads
+* Business logos
+* Business cover images
+* Media validation
+* Image optimization
+* Production custom domain
 
 ---
 
 # MODULE 12
-## Notifications
 
-Planned
+## PAYMENTS
 
-- Email
-- SMS
-- WhatsApp
-- In-App Notifications
+Status:
+
+🔴 PLANNED
+
+Planned:
+
+* Paystack
+* Flutterwave
+* Wallet Payments
+* Payment Records
+* Transaction Verification
+* Refunds
+* Payment Webhooks
+* Commission Processing
+
+---
+
+# MODULE 13
+
+## NOTIFICATIONS
+
+Status:
+
+🟢 DATABASE FOUNDATION COMPLETE
+🔴 BACKEND IMPLEMENTATION PENDING
+
+Completed:
+
+* Notification Prisma model
+* Notification types
+* Notification relationship to User
+* Notification migration
+* Notification table successfully applied to PostgreSQL
+* Database migration status confirmed up to date
+
+Pending:
+
+* Notification service
+* In-app notification API
+* Notification dashboard UI
+* Mark as read
+* Read timestamps
+* Email notifications
+* SMS notifications
+* WhatsApp notifications
+* Notification triggers
+* Notification preferences
+
+---
+
+# MODULE 14
+
+## MESSAGING
+
+Status:
+
+🔴 PLANNED
+
+Planned:
+
+* Conversations
+* Conversation Participants
+* Messages
+* Listing-linked conversations
+* Read/unread state
+* Notifications
+* Dashboard message counts
+
+Note:
+
+The dashboard currently exposes a messages field, but the live messaging backend is not yet implemented.
 
 ---
 
 # DEVELOPMENT ROADMAP
 
-Phase 1
+## Phase 1
+
 ✅ Foundation
 
-Phase 2
+## Phase 2
+
 ✅ UI Components
 
-Phase 3
+## Phase 3
+
 ✅ Marketplace Frontend
 
-Phase 4
-🔄 Prisma Architecture Audit
+## Phase 4
 
-Phase 5
-🔄 Authentication Backend
+✅ Prisma Architecture Audit
 
-Phase 6
-🔄 Wallet Backend
+## Phase 5
 
-Phase 7
-Customer Dashboard
+🟢 Authentication Backend Foundation
 
-Phase 8
-Agent Dashboard
+## Phase 6
 
-Phase 9
-Admin Dashboard
+🟢 Cloudflare R2 Media Foundation
 
-Phase 10
-Interior Marketplace Backend
+## Phase 7
 
-Phase 11
-ICT Services
+🟢 Customer Dashboard Foundation
 
-Phase 12
-Cargo System
+## Phase 8
 
-Phase 13
-Payments
+🟡 Authentication Security Completion
 
-Phase 14
-Production Deployment
+## Phase 9
+
+🟡 Wallet Backend
+
+## Phase 10
+
+🟡 Customer Dashboard Expansion
+
+## Phase 11
+
+🔴 Agent Dashboard
+
+## Phase 12
+
+🔴 Admin Dashboard
+
+## Phase 13
+
+🔴 Interior Marketplace Backend
+
+## Phase 14
+
+🔴 ICT Services
+
+## Phase 15
+
+🔴 Cargo System
+
+## Phase 16
+
+🔴 Payments
+
+## Phase 17
+
+🟡 Notifications Database Foundation
+🔴 Notifications & Messaging Backend
+
+## Phase 18
+
+🔴 Production Deployment
+
+---
+
+# IMMEDIATE NEXT TASK
+
+## Step 1 — Resolve Current Mobile Navigation Issue
+
+Before moving deeper into authentication security:
+
+* Fix Login visibility in the mobile navigation
+* Confirm Login appears when the mobile menu is opened
+* Confirm Login routes correctly to `/login`
+
+## Step 2 — Clean Remaining Next.js Warning
+
+Review the `scroll-behavior: smooth` warning:
+
+* Add the appropriate Next.js `data-scroll-behavior="smooth"` configuration
+* Confirm the warning disappears
+
+## Step 3 — Production Build Verification
+
+Run:
+
+`npm run build`
+
+Confirm:
+
+* Build succeeds
+* No Prisma build errors
+* No runtime/build errors
+* No new image errors
+* No new TypeScript errors
+
+Only after this succeeds should the latest changes be considered production-build verified.
+
+## Step 4 — Authentication Security Completion
+
+Then continue with:
+
+1. Verify current session implementation
+2. Protect dashboard routes
+3. Enforce authentication on private API routes
+4. Add role authorization
+5. Complete email verification workflow
+6. Review logout/session invalidation
+7. Test unauthorized access
+
+## Step 5 — Wallet Backend
+
+After authentication security:
+
+* Wallet creation
+* Welcome bonus
+* Transaction ledger
+* Funding foundation
 
 ---
 
@@ -408,23 +802,58 @@ Production Deployment
 
 ✔ Backend before dashboards
 
+✔ Test before marking complete
+
+✔ Build must pass before milestone completion
+
 ✔ Commit every milestone
+
+✔ Push every milestone
 
 ✔ Update Blueprint every milestone
 
 ✔ Update Changelog every milestone
 
+✔ Never mark a feature complete based only on UI
+
+✔ Do not claim functionality that has not been tested
+
 ---
 
-# GITHUB WORKFLOW
+# MILESTONE COMPLETION PROTOCOL
 
-Every completed milestone must include:
+Every development task follows this sequence:
 
-1. Testing
-2. Git Commit
-3. Git Push
-4. PROJECT_BLUEPRINT Update
-5. CHANGELOG Update
+1. Define the smallest useful milestone
+2. Implement the change
+3. Test the feature
+4. Run `npm run build`
+5. Fix all build/runtime errors
+6. Confirm successful result
+7. Update `PROJECT_BLUEPRINT.md`
+8. Update `CHANGELOG.md`
+9. Git commit
+10. Git push
+11. Select the next milestone from the updated blueprint
+
+A milestone is NOT considered completed until step 6 succeeds.
+
+---
+
+# DOCUMENTATION SYNCHRONIZATION RULE
+
+The Blueprint is the project's source-of-truth roadmap.
+
+After every successfully completed milestone:
+
+* Update the relevant module status
+* Add the completed feature to the Completed list
+* Remove it from Pending where applicable
+* Update the Immediate Next Task
+* Add an entry to CHANGELOG.md
+* Record the successful build/test status
+
+Do not manually invent a percentage unless it is calculated from an agreed milestone system.
 
 ---
 
@@ -450,30 +879,16 @@ Users will be able to:
 
 📈 Manage Businesses
 
+💬 Communicate through Platform Messaging
+
+🔔 Receive Platform Notifications
+
 All from one unified Strong Tower Concepts platform.
 
 ---
 
-# NEXT SESSION (31 JULY 2026)
+# MAINTENANCE
 
-Priority 1
-
-Prisma Architecture Audit
-
-Priority 2
-
-Authentication Backend
-
-Priority 3
-
-Wallet Backend
-
-Priority 4
-
-Welcome Bonus Automation
-
----
-
-Maintained by
+Maintained by:
 
 Strong Tower Concepts Development Team

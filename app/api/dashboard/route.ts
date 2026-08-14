@@ -1,28 +1,33 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET() {
-
   try {
+    const currentUser = await getCurrentUser();
 
-    // Temporary:
-    // Until JWT authentication is connected,
-    // always return the most recently created user.
+    if (!currentUser) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Authentication required.",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
 
-    const user = await prisma.user.findFirst({
-
-      orderBy: {
-        createdAt: "desc",
+    const user = await prisma.user.findUnique({
+      where: {
+        id: currentUser.id,
       },
-
       include: {
         wallet: true,
       },
-
     });
 
     if (!user) {
-
       return NextResponse.json(
         {
           success: false,
@@ -32,41 +37,48 @@ export async function GET() {
           status: 404,
         }
       );
-
     }
-        const walletBalance =
-      user.wallet?.balance ?? 0;
+
+    const walletBalance = user.wallet?.balance ?? 0;
+
+    const propertyCount = await prisma.property.count({
+      where: {
+        listing: {
+          ownerId: user.id,
+        },
+      },
+    });
+
+    const businessCount = await prisma.businessPage.count({
+      where: {
+        ownerId: user.id,
+      },
+    });
+
+    const listingCount = await prisma.listing.count({
+      where: {
+        ownerId: user.id,
+      },
+    });
 
     const dashboardData = {
-
       id: user.id,
-
       firstName: user.firstName,
-
       lastName: user.lastName,
-
       fullName: `${user.firstName} ${user.lastName}`,
-
       email: user.email,
-
       phone: user.phone,
-
       role: user.role,
-
       status: user.status,
-
       verified: user.verified,
-
       walletBalance,
-
-      propertyCount: 0,
-
-      businessCount: 0,
-
+      propertyCount,
+      businessCount,
+      listingCount,
       messageCount: 0,
-
     };
-        return NextResponse.json(
+
+    return NextResponse.json(
       {
         success: true,
         data: dashboardData,
@@ -75,20 +87,17 @@ export async function GET() {
         status: 200,
       }
     );
-      } catch (error) {
-
-    console.error(error);
+  } catch (error) {
+    console.error("Dashboard error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message: "Internal Server Error.",
+        message: "Unable to load dashboard data.",
       },
       {
         status: 500,
       }
     );
-
   }
-
 }

@@ -30,11 +30,12 @@ export default function PropertyCard({
 
         <div className="relative h-60">
 
-          <Image
-            src="/images/properties/property-placeholder.jpg"
-            alt={title}
-            fill
-            className="object-cover"
+         <Image
+          src="/images/properties/property-placeholder.jpg"
+          alt={title}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-cover"
           />
 
           <div className="absolute top-3 left-3 flex gap-2">

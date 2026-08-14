@@ -6,9 +6,221 @@ datasource db {
   provider = "postgresql"
 }
 
-//////////////////////////////////////////////////////
-// ENUMS
-//////////////////////////////////////////////////////
+model User {
+  id                String             @id @default(cuid())
+  firstName         String
+  lastName          String
+  email             String             @unique
+  phone             String             @unique
+  profileImageUrl   String?
+  passwordHash      String
+  role              UserRole
+  status            AccountStatus      @default(PENDING)
+  verified          Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  businessPage      BusinessPage?
+  favorites         Favorite[]
+  identityDocuments IdentityDocument[]
+  listings          Listing[]
+  reviews           Review[]
+  wallet            Wallet?
+  notifications     Notification[]
+}
+
+model IdentityDocument {
+  id                 String               @id @default(cuid())
+  userId             String
+  documentType       IdentityDocumentType
+  documentNumber     String?
+  fileUrl            String
+  verificationStatus VerificationStatus   @default(PENDING)
+  rejectionReason    String?
+  uploadedAt         DateTime             @default(now())
+  reviewedAt         DateTime?
+  reviewedBy         String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([documentType])
+  @@index([verificationStatus])
+  @@index([uploadedAt])
+}
+
+model Wallet {
+  id           String              @id @default(cuid())
+  userId       String              @unique
+  balance      Decimal             @default(0)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+}
+
+model WalletTransaction {
+  id        String                  @id @default(cuid())
+  walletId  String
+  reference String                  @unique
+  type      WalletTransactionType
+  status    WalletTransactionStatus
+  amount    Decimal
+  createdAt DateTime                @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId])
+  @@index([createdAt])
+  @@index([status])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  readAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+}
+
+model BusinessPage {
+  id                 String             @id @default(cuid())
+  ownerId            String             @unique
+  businessName       String
+  slug               String             @unique
+  businessType       BusinessType
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  verificationStatus VerificationStatus @default(PENDING)
+
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+}
+
+model Listing {
+  id          String         @id @default(cuid())
+  ownerId     String
+  listingType ListingType
+  status      ListingStatus  @default(PENDING)
+  title       String
+  slug        String         @unique
+  description String
+  price       Decimal
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  favorites Favorite[]
+  owner     User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  images    ListingImage[]
+  property  Property?
+  reviews   Review[]
+}
+
+model ListingImage {
+  id        String   @id @default(cuid())
+  listingId String
+  imageUrl  String
+  createdAt DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+  @@index([userId])
+  @@index([listingId])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  listingId  String
+  reviewerId String
+  rating     Int
+  comment    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  listing  Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reviewer User     @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
+  @@index([reviewerId])
+  @@index([rating])
+  @@index([createdAt])
+  @@index([listingId, createdAt])
+}
+
+model Property {
+  id          String               @id @default(cuid())
+  listingId   String               @unique
+  category    PropertyCategory
+  purpose     PropertyPurpose
+  state       String
+  city        String
+  address     String
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  listing     Listing              @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  documents   PropertyDocument[]
+  features    PropertyFeature[]
+  inspections PropertyInspection[]
+}
+
+model PropertyFeature {
+  id         String   @id @default(cuid())
+  propertyId String
+  name       String
+  value      String?
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+}
+
+model PropertyDocument {
+  id         String   @id @default(cuid())
+  propertyId String
+  title      String
+  fileUrl    String
+  verified   Boolean  @default(false)
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+}
+
+model PropertyInspection {
+  id             String   @id @default(cuid())
+  propertyId     String
+  customerName   String
+  inspectionDate DateTime
+  status         String
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+  @@index([inspectionDate])
+}
 
 enum UserRole {
   SUPER_ADMIN
@@ -32,6 +244,14 @@ enum VerificationStatus {
   REJECTED
 }
 
+enum IdentityDocumentType {
+  NIN
+  DRIVERS_LICENSE
+  INTERNATIONAL_PASSPORT
+  VOTERS_CARD
+  CAC_DOCUMENT
+}
+
 enum WalletTransactionType {
   DEPOSIT
   PAYMENT
@@ -47,117 +267,21 @@ enum WalletTransactionStatus {
   CANCELLED
 }
 
+enum NotificationType {
+  SYSTEM
+  WALLET
+  PAYMENT
+  PROPERTY
+  INSPECTION
+  VERIFICATION
+  SECURITY
+  PROMOTION
+}
+
 enum BusinessType {
   PROPERTY
   GENERAL
 }
-
-//////////////////////////////////////////////////////
-// USER
-//////////////////////////////////////////////////////
-
-model User {
-  id String @id @default(cuid())
-
-  firstName String
-
-  lastName String
-
-  email String @unique
-
-  phone String @unique
-
-  passwordHash String
-
-  role UserRole
-
-  status AccountStatus @default(PENDING)
-
-  verified Boolean @default(false)
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  wallet Wallet?
-
-  businessPage BusinessPage?
-
-  listings Listing[]
-
-  favorites Favorite[]
-  reviews   Review[]
-}
-
-//////////////////////////////////////////////////////
-// WALLET
-//////////////////////////////////////////////////////
-
-model Wallet {
-  id String @id @default(cuid())
-
-  userId String @unique
-
-  balance Decimal @default(0)
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  transactions WalletTransaction[]
-}
-
-//////////////////////////////////////////////////////
-// WALLET TRANSACTIONS
-//////////////////////////////////////////////////////
-
-model WalletTransaction {
-  id String @id @default(cuid())
-
-  walletId String
-
-  reference String @unique
-
-  type WalletTransactionType
-
-  status WalletTransactionStatus
-
-  amount Decimal
-
-  createdAt DateTime @default(now())
-
-  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
-}
-
-//////////////////////////////////////////////////////
-// BUSINESS PAGE
-//////////////////////////////////////////////////////
-
-model BusinessPage {
-  id String @id @default(cuid())
-
-  ownerId String @unique
-
-  businessName String
-
-  slug String @unique
-
-  businessType BusinessType
-
-  verificationStatus VerificationStatus @default(PENDING)
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-}
-
-//////////////////////////////////////////////////////
-// LISTINGS
-//////////////////////////////////////////////////////
 
 enum ListingStatus {
   DRAFT
@@ -178,101 +302,6 @@ enum ListingType {
   EDUCATION
 }
 
-model Listing {
-  id String @id @default(cuid())
-
-  ownerId String
-
-  listingType ListingType
-
-  status ListingStatus @default(PENDING)
-
-  title String
-
-  slug String @unique
-
-  description String
-
-  price Decimal
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-
-  images ListingImage[]
-
-  favorites Favorite[]
-
-  reviews Review[]
-
-  property Property?
-}
-
-//////////////////////////////////////////////////////
-// LISTING IMAGES
-//////////////////////////////////////////////////////
-
-model ListingImage {
-  id String @id @default(cuid())
-
-  listingId String
-
-  imageUrl String
-
-  createdAt DateTime @default(now())
-
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-}
-
-//////////////////////////////////////////////////////
-// FAVORITES
-//////////////////////////////////////////////////////
-
-model Favorite {
-  id String @id @default(cuid())
-
-  userId String
-
-  listingId String
-
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, listingId])
-}
-
-//////////////////////////////////////////////////////
-// REVIEWS
-//////////////////////////////////////////////////////
-
-model Review {
-  id         String   @id @default(cuid())
-  listingId  String
-  reviewerId String
-  rating     Int
-  comment    String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  listing  Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  reviewer User    @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
-
-  @@index([listingId])
-  @@index([reviewerId])
-  @@index([rating])
-  @@index([createdAt])
-  @@index([listingId, createdAt])
-}
-
-//////////////////////////////////////////////////////
-// PROPERTY MODULE
-//////////////////////////////////////////////////////
-
 enum PropertyCategory {
   LAND
   HOUSE
@@ -288,72 +317,4 @@ enum PropertyPurpose {
   SALE
   RENT
   SHORTLET
-}
-
-model Property {
-  id String @id @default(cuid())
-
-  listingId String @unique
-
-  category PropertyCategory
-
-  purpose PropertyPurpose
-
-  state String
-
-  city String
-
-  address String
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-
-  features PropertyFeature[]
-
-  documents PropertyDocument[]
-
-  inspections PropertyInspection[]
-}
-
-model PropertyFeature {
-  id String @id @default(cuid())
-
-  propertyId String
-
-  name String
-
-  value String?
-
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-}
-
-model PropertyDocument {
-  id String @id @default(cuid())
-
-  propertyId String
-
-  title String
-
-  fileUrl String
-
-  verified Boolean @default(false)
-
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-}
-
-model PropertyInspection {
-  id String @id @default(cuid())
-
-  propertyId String
-
-  customerName String
-
-  inspectionDate DateTime
-
-  status String
-
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 }

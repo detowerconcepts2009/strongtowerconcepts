@@ -1,19 +1,36 @@
 import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET() {
   try {
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Unauthorized.",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
+
     return NextResponse.json(
       {
         success: true,
         user: {
-          id: "temporary-user",
-          firstName: "Strong",
-          lastName: "Tower User",
-          fullName: "Strong Tower User",
-          email: "customer@stc.com",
-          role: "CUSTOMER",
-          status: "ACTIVE",
-          verified: false,
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          fullName: `${user.firstName} ${user.lastName}`,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          status: user.status,
+          profileImageUrl:
+            user.profileImageUrl || null,
         },
       },
       {
@@ -21,7 +38,7 @@ export async function GET() {
       }
     );
   } catch (error) {
-    console.error(error);
+    console.error("User profile error:", error);
 
     return NextResponse.json(
       {

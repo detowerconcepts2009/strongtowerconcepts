@@ -14,17 +14,17 @@ export default function Button({
   className = "",
 }: ButtonProps) {
   const baseStyle =
-    "inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold transition duration-300";
+    "inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold transition-all duration-300";
 
   const variants = {
     primary:
-      "bg-blue-900 text-white hover:bg-blue-800",
+      "bg-blue-900 text-white border-2 border-blue-900 hover:bg-blue-800 hover:border-blue-800",
 
     secondary:
-      "bg-green-600 text-white hover:bg-green-700",
+      "bg-green-600 text-white border-2 border-green-600 hover:bg-green-700 hover:border-green-700",
 
     outline:
-      "border-2 border-blue-900 text-blue-900 hover:bg-blue-900 hover:text-white",
+      "border-2 border-white text-white bg-transparent hover:bg-white hover:text-blue-950",
   };
 
   return (

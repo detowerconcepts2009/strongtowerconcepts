@@ -1,59 +1,72 @@
 import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function GET() {
-
   try {
+    const user = await getCurrentUser();
 
-    const user = await prisma.user.findFirst({
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Unauthorized.",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
 
-      include: {
-        wallet: true,
-      },
+    const [wallet, properties, businesses, listings] =
+      await Promise.all([
+        prisma.wallet.findUnique({
+          where: {
+            userId: user.id,
+          },
+          select: {
+            balance: true,
+          },
+        }),
 
-    });
+        prisma.property.count({
+          where: {
+            listing: {
+              ownerId: user.id,
+            },
+          },
+        }),
 
-    const walletBalance =
-      user?.wallet?.balance ?? 0;
+        prisma.businessPage.count({
+          where: {
+            ownerId: user.id,
+          },
+        }),
 
-    const properties =
-      await prisma.property.count();
-
-    const businesses =
-      await prisma.businessPage.count();
-
-    const listings =
-      await prisma.listing.count();
-
-    const messages = 0;
+        prisma.listing.count({
+          where: {
+            ownerId: user.id,
+          },
+        }),
+      ]);
 
     return NextResponse.json(
       {
         success: true,
-
         stats: {
-
-          walletBalance,
-
+          walletBalance: wallet?.balance ?? 0,
           properties,
-
           businesses,
-
           listings,
-
-          messages,
-
+          messages: 0,
         },
-
       },
       {
         status: 200,
       }
     );
-
   } catch (error) {
-
-    console.error(error);
+    console.error("Dashboard statistics error:", error);
 
     return NextResponse.json(
       {
@@ -64,7 +77,5 @@ export async function GET() {
         status: 500,
       }
     );
-
   }
-
 }

@@ -1,3 +1,14 @@
+export interface NavigationChild {
+  label: string;
+  href: string;
+}
+
+export interface NavItem {
+  label: string;
+  href?: string;
+  children?: NavigationChild[];
+}
+
 export const navigation: NavItem[] = [
   {
     label: "Home",

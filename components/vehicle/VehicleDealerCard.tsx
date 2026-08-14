@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import ContactButtons from "../property-details/ContactButtons";
+import ContactButtons from "../marketplace/ContactButtons";
 
 interface VehicleDealerCardProps {
   name: string;
@@ -24,22 +24,18 @@ export default function VehicleDealerCard({
   verified = true,
   totalVehicles = 0,
 }: VehicleDealerCardProps) {
-
   return (
-
     <div className="rounded-2xl bg-white p-6 shadow-lg">
 
       <div className="flex flex-col items-center">
 
         <div className="relative h-28 w-28 overflow-hidden rounded-full">
-
           <Image
             src={photo}
             alt={name}
             fill
             className="object-cover"
           />
-
         </div>
 
         <h2 className="mt-5 text-2xl font-bold text-blue-950">
@@ -51,19 +47,13 @@ export default function VehicleDealerCard({
         </p>
 
         {verified && (
-
           <span className="mt-3 rounded-full bg-green-100 px-4 py-1 text-sm font-semibold text-green-700">
-
             ✓ Verified Vehicle Dealer
-
           </span>
-
         )}
 
         <p className="mt-4 text-sm text-gray-500">
-
           {totalVehicles} Active Vehicle Listings
-
         </p>
 
       </div>
@@ -81,7 +71,5 @@ export default function VehicleDealerCard({
       </div>
 
     </div>
-
   );
-
 }

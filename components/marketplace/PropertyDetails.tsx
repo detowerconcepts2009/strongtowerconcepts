@@ -92,7 +92,10 @@ export default function PropertyDetails({
             longitude={property.longitude}
           />
 
-          <ShareButtons />
+          <ShareButtons
+  title={property.title}
+  url={`/marketplace/properties/${property.id}`}
+/>
 
         </div>
 
