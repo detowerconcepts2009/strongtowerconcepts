@@ -1,6 +1,6 @@
-import { redirect } from "next/navigation";
-import prisma from "@/lib/prisma";
 import { getCurrentSession } from "@/lib/session";
+import prisma from "@/lib/prisma";
+import { redirect } from "next/navigation";
 
 export interface AuthUser {
   id: string;
@@ -41,8 +41,8 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   }
 
   if (
-    user.status === "SUSPENDED" ||
-    user.status === "BLOCKED"
+    user.status !== "ACTIVE" &&
+    user.status !== "PENDING"
   ) {
     return null;
   }
