@@ -1,6 +1,6 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
+import { getCurrentSession } from "@/lib/session";
 
 export interface AuthUser {
   id: string;
@@ -14,16 +14,15 @@ export interface AuthUser {
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
-  const cookieStore = await cookies();
-  const userId = cookieStore.get("stc_user_id")?.value;
+  const session = await getCurrentSession();
 
-  if (!userId) {
+  if (!session) {
     return null;
   }
 
   const user = await prisma.user.findUnique({
     where: {
-      id: userId,
+      id: session.userId,
     },
     select: {
       id: true,
@@ -38,6 +37,13 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   });
 
   if (!user) {
+    return null;
+  }
+
+  if (
+    user.status === "SUSPENDED" ||
+    user.status === "BLOCKED"
+  ) {
     return null;
   }
 

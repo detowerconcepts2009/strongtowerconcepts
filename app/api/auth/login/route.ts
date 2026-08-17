@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
+import { createSession } from "@/lib/session";
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,7 +21,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const normalizedEmail = String(email).trim().toLowerCase();
+    const normalizedEmail = String(email)
+      .trim()
+      .toLowerCase();
 
     const user = await prisma.user.findUnique({
       where: {
@@ -57,12 +60,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (user.status !== "ACTIVE" && user.status !== "PENDING") {
+    if (
+      user.status === "SUSPENDED" ||
+      user.status === "BLOCKED"
+    ) {
       return NextResponse.json(
         {
           success: false,
           message:
-            "Your account has been suspended. Please contact support.",
+            "Your account has been suspended or blocked. Please contact support.",
         },
         {
           status: 403,
@@ -70,7 +76,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const response = NextResponse.json(
+    await createSession(user.id);
+
+    return NextResponse.json(
       {
         success: true,
         message: "Login successful.",
@@ -88,17 +96,6 @@ export async function POST(request: NextRequest) {
         status: 200,
       }
     );
-
-    response.cookies.set({
-      name: "stc_user_id",
-      value: user.id,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-    });
-
-    return response;
   } catch (error) {
     console.error("Login error:", error);
 

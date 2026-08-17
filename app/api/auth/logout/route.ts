@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
+import { deleteCurrentSession } from "@/lib/session";
 
 export async function POST() {
-
   try {
+    await deleteCurrentSession();
 
-    const response = NextResponse.json(
+    return NextResponse.json(
       {
         success: true,
         message: "Logout successful.",
@@ -13,21 +14,8 @@ export async function POST() {
         status: 200,
       }
     );
-
-    response.cookies.set({
-      name: "stc_user_id",
-      value: "",
-      expires: new Date(0),
-      path: "/",
-      httpOnly: true,
-      sameSite: "lax",
-    });
-
-    return response;
-
   } catch (error) {
-
-    console.error(error);
+    console.error("Logout error:", error);
 
     return NextResponse.json(
       {
@@ -38,7 +26,5 @@ export async function POST() {
         status: 500,
       }
     );
-
   }
-
 }
