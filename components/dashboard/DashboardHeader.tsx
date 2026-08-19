@@ -6,9 +6,11 @@ import {
   Menu,
   Search,
   UserCircle2,
+  X,
 } from "lucide-react";
 
 import { useDashboard } from "./context/DashboardContext";
+import DashboardNotifications from "./DashboardNotifications";
 
 interface DashboardHeaderProps {
   title: string;
@@ -30,6 +32,9 @@ export default function DashboardHeader({
     role: "",
     profileImageUrl: null,
   });
+
+  const [notificationsOpen, setNotificationsOpen] =
+    useState(false);
 
   useEffect(() => {
     async function loadUser() {
@@ -55,78 +60,104 @@ export default function DashboardHeader({
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-white px-4 py-4 shadow-sm md:px-8">
-      {/* LEFT SIDE */}
+    <header className="sticky top-0 z-30 border-b bg-white px-4 py-4 shadow-sm md:px-8">
+      <div className="flex items-center justify-between">
+        {/* LEFT SIDE */}
 
-      <div className="flex items-center gap-4">
-        <button
-          onClick={openSidebar}
-          className="rounded-lg p-2 hover:bg-slate-100 lg:hidden"
-        >
-          <Menu size={24} />
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={openSidebar}
+            className="rounded-lg p-2 hover:bg-slate-100 lg:hidden"
+            aria-label="Open menu"
+          >
+            <Menu size={24} />
+          </button>
 
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">
-            {title}
-          </h1>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">
+              {title}
+            </h1>
 
-          <p className="hidden text-sm text-slate-500 md:block">
-            Welcome back to Strong Tower Concepts.
-          </p>
-        </div>
-      </div>
-
-      {/* RIGHT SIDE */}
-
-      <div className="flex items-center gap-3 md:gap-6">
-        {/* SEARCH */}
-
-        <div className="relative hidden lg:block">
-          <Search
-            size={18}
-            className="absolute left-4 top-3.5 text-slate-400"
-          />
-
-          <input
-            type="text"
-            placeholder="Search..."
-            className="w-72 rounded-xl border border-slate-200 py-3 pl-11 pr-4 outline-none focus:border-blue-700"
-          />
+            <p className="hidden text-sm text-slate-500 md:block">
+              Welcome back to Strong Tower Concepts.
+            </p>
+          </div>
         </div>
 
-        {/* NOTIFICATIONS */}
+        {/* RIGHT SIDE */}
 
-        <button className="relative rounded-lg p-2 hover:bg-slate-100">
-          <Bell size={23} />
+        <div className="flex items-center gap-3 md:gap-6">
+          {/* SEARCH */}
 
-          <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-600" />
-        </button>
-
-        {/* USER */}
-
-        <div className="flex items-center gap-3">
-          {user.profileImageUrl ? (
-            <img
-              src={user.profileImageUrl}
-              alt={user.fullName}
-              className="h-[42px] w-[42px] rounded-full object-cover"
+          <div className="relative hidden lg:block">
+            <Search
+              size={18}
+              className="absolute left-4 top-3.5 text-slate-400"
             />
-          ) : (
-            <UserCircle2
-              size={42}
-              className="text-blue-900"
+
+            <input
+              type="text"
+              placeholder="Search..."
+              className="w-72 rounded-xl border border-slate-200 py-3 pl-11 pr-4 outline-none focus:border-blue-700"
             />
-          )}
+          </div>
 
-          <div className="hidden lg:block">
-            <p className="font-semibold">
-              {user.fullName}
-            </p>
+          {/* NOTIFICATIONS */}
 
-            <p className="text-xs uppercase text-slate-500">
-              {user.role}
-            </p>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() =>
+                setNotificationsOpen(
+                  (current) => !current
+                )
+              }
+              className="relative rounded-lg p-2 hover:bg-slate-100"
+              aria-label="Notifications"
+              aria-expanded={notificationsOpen}
+            >
+              {notificationsOpen ? (
+                <X size={26} />
+              ) : (
+                <Bell size={26} />
+              )}
+
+              <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-600" />
+            </button>
+
+            {notificationsOpen && (
+              <div className="absolute right-0 top-14 z-50 w-[360px] max-w-[calc(100vw-2rem)]">
+                <DashboardNotifications />
+              </div>
+            )}
+          </div>
+
+          {/* USER */}
+
+          <div className="flex items-center gap-3">
+            {user.profileImageUrl ? (
+              <img
+                src={user.profileImageUrl}
+                alt={user.fullName}
+                className="h-[42px] w-[42px] rounded-full object-cover"
+              />
+            ) : (
+              <UserCircle2
+                size={42}
+                className="text-blue-900"
+              />
+            )}
+
+            <div className="hidden lg:block">
+              <p className="font-semibold">
+                {user.fullName}
+              </p>
+
+              <p className="text-xs uppercase text-slate-500">
+                {user.role}
+              </p>
+            </div>
           </div>
         </div>
       </div>
