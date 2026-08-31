@@ -6,7 +6,7 @@ interface ProductCardProps {
   name: string;
   category: string;
   price: string;
-  image?: string;
+  image?: string | null;
   featured?: boolean;
 }
 
@@ -15,48 +15,52 @@ export default function ProductCard({
   name,
   category,
   price,
+  image,
   featured,
 }: ProductCardProps) {
   return (
-    <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition duration-300 overflow-hidden">
+    <div className="overflow-hidden rounded-2xl bg-white shadow-md transition duration-300 hover:shadow-xl">
+      {/* IMAGE */}
 
-      {/* Image */}
-
-      <div className="relative h-56 bg-gray-200 flex items-center justify-center">
-
-        <span className="text-gray-500">
-          Product Image
-        </span>
-
-        {featured && (
-          <span className="absolute top-3 left-3 bg-orange-500 text-white text-xs px-3 py-1 rounded-full">
-            Featured
+      <div className="relative flex h-56 items-center justify-center bg-slate-100">
+        {image ? (
+          <img
+            src={image}
+            alt={name}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <span className="text-sm text-slate-400">
+            Product Image
           </span>
         )}
 
+        {featured && (
+          <span className="absolute left-3 top-3 rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold text-white">
+            Featured
+          </span>
+        )}
       </div>
 
-      {/* Body */}
+      {/* BODY */}
 
       <div className="p-5">
-
         <p className="text-sm font-semibold text-blue-900">
           {category}
         </p>
 
-        <h3 className="text-xl font-bold mt-2">
+        <h3 className="mt-2 text-xl font-bold text-slate-900">
           {name}
         </h3>
 
-        <p className="text-2xl font-bold text-blue-900 mt-4">
+        <p className="mt-4 text-2xl font-bold text-blue-900">
           {price}
         </p>
 
-        <div className="flex gap-3 mt-6">
-
+        <div className="mt-6 flex gap-3">
           <Button
             text="View Details"
-            href={`/products/${id}`}
+            href={`/marketplace/interior/${id}`}
             className="flex-1"
           />
 
@@ -65,11 +69,8 @@ export default function ProductCard({
             variant="outline"
             className="flex-1"
           />
-
         </div>
-
       </div>
-
     </div>
   );
 }

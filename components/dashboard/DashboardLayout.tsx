@@ -19,10 +19,12 @@ export default function DashboardLayout({
       <div className="min-h-screen bg-gray-100">
         <DashboardSidebar />
 
-        <div className="lg:ml-72">
+        <div className="xl:ml-72">
           <DashboardHeader title={title} />
 
-          <main className="p-6">{children}</main>
+          <main className="p-6">
+            {children}
+          </main>
         </div>
       </div>
     </DashboardProvider>

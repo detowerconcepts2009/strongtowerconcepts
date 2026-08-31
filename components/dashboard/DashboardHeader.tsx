@@ -25,30 +25,39 @@ interface UserProfile {
 export default function DashboardHeader({
   title,
 }: DashboardHeaderProps) {
-  const { openSidebar } = useDashboard();
+  const { openSidebar } =
+    useDashboard();
 
-  const [user, setUser] = useState<UserProfile>({
-    fullName: "Loading...",
-    role: "",
-    profileImageUrl: null,
-  });
+  const [user, setUser] =
+    useState<UserProfile>({
+      fullName: "Loading...",
+      role: "",
+      profileImageUrl: null,
+    });
 
-  const [notificationsOpen, setNotificationsOpen] =
-    useState(false);
+  const [
+    notificationsOpen,
+    setNotificationsOpen,
+  ] = useState(false);
 
   useEffect(() => {
     async function loadUser() {
       try {
-        const response = await fetch("/api/user/me");
+        const response =
+          await fetch("/api/user/me");
 
-        const data = await response.json();
+        const data =
+          await response.json();
 
         if (data.success) {
           setUser({
-            fullName: data.user.fullName,
+            fullName:
+              data.user.fullName,
             role: data.user.role,
             profileImageUrl:
-              data.user.profileImageUrl || null,
+              data.user
+                .profileImageUrl ||
+              null,
           });
         }
       } catch (error) {
@@ -61,20 +70,21 @@ export default function DashboardHeader({
 
   return (
     <header className="sticky top-0 z-30 border-b bg-white px-4 py-4 shadow-sm md:px-8">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
+
         {/* LEFT SIDE */}
 
-        <div className="flex items-center gap-4">
+        <div className="flex min-w-0 items-center gap-4">
           <button
             type="button"
             onClick={openSidebar}
-            className="rounded-lg p-2 hover:bg-slate-100 lg:hidden"
+            className="rounded-lg p-2 hover:bg-slate-100 xl:hidden"
             aria-label="Open menu"
           >
             <Menu size={24} />
           </button>
 
-          <div>
+          <div className="min-w-0">
             <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">
               {title}
             </h1>
@@ -88,9 +98,10 @@ export default function DashboardHeader({
         {/* RIGHT SIDE */}
 
         <div className="flex items-center gap-3 md:gap-6">
+
           {/* SEARCH */}
 
-          <div className="relative hidden lg:block">
+          <div className="relative hidden 2xl:block">
             <Search
               size={18}
               className="absolute left-4 top-3.5 text-slate-400"
@@ -115,7 +126,9 @@ export default function DashboardHeader({
               }
               className="relative rounded-lg p-2 hover:bg-slate-100"
               aria-label="Notifications"
-              aria-expanded={notificationsOpen}
+              aria-expanded={
+                notificationsOpen
+              }
             >
               {notificationsOpen ? (
                 <X size={26} />
@@ -149,7 +162,7 @@ export default function DashboardHeader({
               />
             )}
 
-            <div className="hidden lg:block">
+            <div className="hidden xl:block">
               <p className="font-semibold">
                 {user.fullName}
               </p>
