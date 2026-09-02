@@ -22,11 +22,15 @@ interface UserProfile {
   profileImageUrl: string | null;
 }
 
+interface ProfileImageUpdatedEvent
+  extends CustomEvent<{
+    imageUrl: string;
+  }> {}
+
 export default function DashboardHeader({
   title,
 }: DashboardHeaderProps) {
-  const { openSidebar } =
-    useDashboard();
+  const { openSidebar } = useDashboard();
 
   const [user, setUser] =
     useState<UserProfile>({
@@ -41,37 +45,77 @@ export default function DashboardHeader({
   ] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
+
     async function loadUser() {
       try {
-        const response =
-          await fetch("/api/user/me");
+        const response = await fetch(
+          "/api/user/me",
+          {
+            cache: "no-store",
+          }
+        );
 
-        const data =
-          await response.json();
+        const data = await response.json();
 
-        if (data.success) {
+        if (
+          mounted &&
+          response.ok &&
+          data.success &&
+          data.user
+        ) {
           setUser({
             fullName:
               data.user.fullName,
-            role: data.user.role,
+            role:
+              data.user.role,
             profileImageUrl:
-              data.user
-                .profileImageUrl ||
+              data.user.profileImageUrl ||
               null,
           });
         }
       } catch (error) {
-        console.error(error);
+        console.error(
+          "Dashboard user loading error:",
+          error
+        );
       }
     }
 
     loadUser();
+
+    function handleProfileImageUpdated(
+      event: ProfileImageUpdatedEvent
+    ) {
+      if (!mounted) {
+        return;
+      }
+
+      setUser((currentUser) => ({
+        ...currentUser,
+        profileImageUrl:
+          event.detail.imageUrl,
+      }));
+    }
+
+    window.addEventListener(
+      "profile-image-updated",
+      handleProfileImageUpdated as EventListener
+    );
+
+    return () => {
+      mounted = false;
+
+      window.removeEventListener(
+        "profile-image-updated",
+        handleProfileImageUpdated as EventListener
+      );
+    };
   }, []);
 
   return (
     <header className="sticky top-0 z-30 border-b bg-white px-4 py-4 shadow-sm md:px-8">
       <div className="flex items-center justify-between gap-4">
-
         {/* LEFT SIDE */}
 
         <div className="flex min-w-0 items-center gap-4">
@@ -98,7 +142,6 @@ export default function DashboardHeader({
         {/* RIGHT SIDE */}
 
         <div className="flex items-center gap-3 md:gap-6">
-
           {/* SEARCH */}
 
           <div className="relative hidden 2xl:block">

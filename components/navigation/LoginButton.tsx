@@ -20,6 +20,11 @@ interface UserResponse {
   user?: CurrentUser;
 }
 
+interface ProfileImageUpdatedEvent
+  extends CustomEvent<{
+    imageUrl: string;
+  }> {}
+
 export default function LoginButton() {
   const [user, setUser] =
     useState<CurrentUser | null>(null);
@@ -77,8 +82,36 @@ export default function LoginButton() {
 
     loadCurrentUser();
 
+    function handleProfileImageUpdated(
+      event: ProfileImageUpdatedEvent
+    ) {
+      if (!mounted) {
+        return;
+      }
+
+      setUser((currentUser) =>
+        currentUser
+          ? {
+              ...currentUser,
+              profileImageUrl:
+                event.detail.imageUrl,
+            }
+          : currentUser
+      );
+    }
+
+    window.addEventListener(
+      "profile-image-updated",
+      handleProfileImageUpdated as EventListener
+    );
+
     return () => {
       mounted = false;
+
+      window.removeEventListener(
+        "profile-image-updated",
+        handleProfileImageUpdated as EventListener
+      );
     };
   }, []);
 
@@ -148,6 +181,10 @@ export default function LoginButton() {
    * LOGGED IN
    */
 
+  const initials =
+    `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`
+      .toUpperCase();
+
   return (
     <Link
       href="/dashboard"
@@ -181,12 +218,7 @@ export default function LoginButton() {
         />
       ) : (
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-900 text-xs font-bold text-white">
-          {user.firstName
-            .charAt(0)
-            .toUpperCase()}
-          {user.lastName
-            .charAt(0)
-            .toUpperCase()}
+          {initials}
         </span>
       )}
 
