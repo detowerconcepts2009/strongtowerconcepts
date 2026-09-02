@@ -14,6 +14,7 @@ interface CatalogueProduct {
   productType: "MATTRESS" | "PILLOW";
   name: string;
   description: string | null;
+  price: number | string | null;
   active: boolean;
   createdAt: string;
   images: CatalogueImage[];
@@ -46,7 +47,33 @@ interface UploadResponse {
 const emptyEditForm = {
   name: "",
   description: "",
+  price: "",
 };
+
+function formatPrice(value: number | string | null) {
+  if (value === null || value === "") {
+    return "Price not set";
+  }
+
+  const numericValue =
+    typeof value === "number"
+      ? value
+      : Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return "Price not set";
+  }
+
+  return new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    maximumFractionDigits: 2,
+  }).format(numericValue);
+}
+
+function normalizePriceInput(value: string) {
+  return value.replace(/,/g, "").trim();
+}
 
 export default function CatalogueManager() {
   const [products, setProducts] = useState<
@@ -84,6 +111,8 @@ export default function CatalogueManager() {
   const [name, setName] = useState("");
   const [description, setDescription] =
     useState("");
+
+  const [price, setPrice] = useState("");
 
   const [selectedFile, setSelectedFile] =
     useState<File | null>(null);
@@ -155,10 +184,21 @@ export default function CatalogueManager() {
     event.preventDefault();
 
     const trimmedName = name.trim();
+    const normalizedPrice =
+      normalizePriceInput(price);
 
     if (!trimmedName) {
+      setError("Product name is required.");
+      return;
+    }
+
+    if (
+      normalizedPrice &&
+      (!Number.isFinite(Number(normalizedPrice)) ||
+        Number(normalizedPrice) < 0)
+    ) {
       setError(
-        "Product name is required."
+        "Price must be a valid number greater than or equal to zero."
       );
       return;
     }
@@ -181,6 +221,8 @@ export default function CatalogueManager() {
             name: trimmedName,
             description:
               description.trim() || null,
+            price:
+              normalizedPrice || null,
           }),
         }
       );
@@ -263,6 +305,7 @@ export default function CatalogueManager() {
 
       setName("");
       setDescription("");
+      setPrice("");
       setSelectedFile(null);
 
       const fileInput =
@@ -304,6 +347,10 @@ export default function CatalogueManager() {
       name: product.name,
       description:
         product.description || "",
+      price:
+        product.price === null
+          ? ""
+          : String(product.price),
     });
 
     setError("");
@@ -321,6 +368,22 @@ export default function CatalogueManager() {
     if (!editForm.name.trim()) {
       setError(
         "Product name cannot be empty."
+      );
+      return;
+    }
+
+    const normalizedPrice =
+      normalizePriceInput(
+        editForm.price
+      );
+
+    if (
+      normalizedPrice &&
+      (!Number.isFinite(Number(normalizedPrice)) ||
+        Number(normalizedPrice) < 0)
+    ) {
+      setError(
+        "Price must be a valid number greater than or equal to zero."
       );
       return;
     }
@@ -344,6 +407,8 @@ export default function CatalogueManager() {
             description:
               editForm.description.trim() ||
               null,
+            price:
+              normalizedPrice || null,
           }),
         }
       );
@@ -443,8 +508,6 @@ export default function CatalogueManager() {
 
   /*
    * ADD IMAGE
-   *
-   * This uploads another image without making it primary.
    */
 
   async function addProductImage(
@@ -776,8 +839,8 @@ export default function CatalogueManager() {
         </h1>
 
         <p className="mt-2 text-slate-600">
-          Manage mattresses and pillows, their images
-          and catalogue status.
+          Manage mattresses and pillows, their
+          prices, images and catalogue status.
         </p>
       </div>
 
@@ -806,8 +869,8 @@ export default function CatalogueManager() {
         </h2>
 
         <p className="mt-1 text-sm text-slate-500">
-          Create a mattress or pillow and upload its
-          primary image in one step.
+          Create a mattress or pillow and optionally
+          set its selling price and primary image.
         </p>
 
         <div className="mt-6 grid gap-5 md:grid-cols-2">
@@ -863,6 +926,41 @@ export default function CatalogueManager() {
               placeholder="e.g. Vita Supreme"
               className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
             />
+          </div>
+
+          {/* PRICE */}
+
+          <div>
+            <label
+              htmlFor="product-price"
+              className="block text-sm font-semibold text-slate-700"
+            >
+              Selling Price (₦)
+            </label>
+
+            <input
+              id="product-price"
+              type="number"
+              min="0"
+              step="0.01"
+              value={price}
+              onChange={(event) =>
+                setPrice(event.target.value)
+              }
+              placeholder={
+                productType === "PILLOW"
+                  ? "e.g. 25000"
+                  : "Optional for mattress"
+              }
+              className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+            />
+
+            {productType === "MATTRESS" && (
+              <p className="mt-2 text-xs text-slate-500">
+                Leave blank when pricing is maintained
+                in the detailed mattress catalogue.
+              </p>
+            )}
           </div>
         </div>
 
@@ -1016,6 +1114,12 @@ export default function CatalogueManager() {
                           {product.name}
                         </h3>
 
+                        <p className="mt-2 text-lg font-black text-blue-900">
+                          {formatPrice(
+                            product.price
+                          )}
+                        </p>
+
                         {product.description && (
                           <p className="mt-2 text-sm leading-6 text-slate-600">
                             {
@@ -1062,6 +1166,48 @@ export default function CatalogueManager() {
                             }
                             className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3"
                           />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor={`edit-price-${product.id}`}
+                            className="block text-sm font-semibold text-slate-700"
+                          >
+                            Selling Price (₦)
+                          </label>
+
+                          <input
+                            id={`edit-price-${product.id}`}
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={
+                              editForm.price
+                            }
+                            onChange={(
+                              event
+                            ) =>
+                              setEditForm(
+                                (current) => ({
+                                  ...current,
+                                  price:
+                                    event.target
+                                      .value,
+                                })
+                              )
+                            }
+                            placeholder="Enter selling price"
+                            className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3"
+                          />
+
+                          {product.productType ===
+                            "MATTRESS" && (
+                            <p className="mt-2 text-xs text-slate-500">
+                              Leave blank when using
+                              the detailed mattress
+                              catalogue pricing.
+                            </p>
+                          )}
                         </div>
 
                         <div>

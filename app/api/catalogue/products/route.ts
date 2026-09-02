@@ -28,6 +28,30 @@ function getObjectKeyFromUrl(imageUrl: string) {
   );
 }
 
+function parseOptionalPrice(
+  value: unknown
+): number | null | "INVALID" {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const numericValue =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value.replace(/,/g, "").trim())
+        : NaN;
+
+  if (
+    !Number.isFinite(numericValue) ||
+    numericValue < 0
+  ) {
+    return "INVALID";
+  }
+
+  return numericValue;
+}
+
 async function requireCatalogueManager() {
   const user = await getCurrentUser();
 
@@ -148,6 +172,9 @@ export async function POST(request: Request) {
         ? body.description.trim()
         : "";
 
+    const parsedPrice =
+      parseOptionalPrice(body?.price);
+
     if (
       productType !== "MATTRESS" &&
       productType !== "PILLOW"
@@ -177,6 +204,26 @@ export async function POST(request: Request) {
       );
     }
 
+    if (parsedPrice === "INVALID") {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Price must be a valid number greater than or equal to zero.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    /*
+     * Mattress prices are maintained in the detailed
+     * mattress catalogue and may remain null here.
+     *
+     * Non-configurable catalogue products such as
+     * pillows can store their selling price here.
+     */
     const product =
       await prisma.catalogueProduct.create({
         data: {
@@ -184,6 +231,10 @@ export async function POST(request: Request) {
           name,
           description:
             description || null,
+          price:
+            parsedPrice === null
+              ? null
+              : parsedPrice,
         },
         include: {
           images: true,
@@ -245,6 +296,12 @@ export async function PATCH(request: Request) {
         "description"
       );
 
+    const hasPrice =
+      Object.prototype.hasOwnProperty.call(
+        body,
+        "price"
+      );
+
     const hasActive =
       typeof body?.active === "boolean";
 
@@ -264,6 +321,7 @@ export async function PATCH(request: Request) {
     if (
       !hasName &&
       !hasDescription &&
+      !hasPrice &&
       !hasActive
     ) {
       return NextResponse.json(
@@ -301,6 +359,7 @@ export async function PATCH(request: Request) {
     const data: {
       name?: string;
       description?: string | null;
+      price?: number | null;
       active?: boolean;
     } = {};
 
@@ -330,6 +389,27 @@ export async function PATCH(request: Request) {
         "string"
           ? body.description.trim() || null
           : null;
+    }
+
+    if (hasPrice) {
+      const parsedPrice =
+        parseOptionalPrice(body.price);
+
+      if (parsedPrice === "INVALID") {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "Price must be a valid number greater than or equal to zero.",
+          },
+          {
+            status: 400,
+          }
+        );
+      }
+
+      data.price =
+        parsedPrice;
     }
 
     if (hasActive) {

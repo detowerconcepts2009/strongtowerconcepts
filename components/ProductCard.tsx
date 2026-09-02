@@ -1,13 +1,13 @@
-import Link from "next/link";
 import Button from "./Button";
 
 interface ProductCardProps {
-  id: number;
+  id: string | number;
   name: string;
   category: string;
   price: string;
   image?: string | null;
   featured?: boolean;
+  detailsHref?: string;
 }
 
 export default function ProductCard({
@@ -17,11 +17,14 @@ export default function ProductCard({
   price,
   image,
   featured,
+  detailsHref,
 }: ProductCardProps) {
+  const resolvedDetailsHref =
+    detailsHref ??
+    `/marketplace/interior/${id}`;
+
   return (
     <div className="overflow-hidden rounded-2xl bg-white shadow-md transition duration-300 hover:shadow-xl">
-      {/* IMAGE */}
-
       <div className="relative flex h-56 items-center justify-center bg-slate-100">
         {image ? (
           <img
@@ -42,8 +45,6 @@ export default function ProductCard({
         )}
       </div>
 
-      {/* BODY */}
-
       <div className="p-5">
         <p className="text-sm font-semibold text-blue-900">
           {category}
@@ -60,7 +61,7 @@ export default function ProductCard({
         <div className="mt-6 flex gap-3">
           <Button
             text="View Details"
-            href={`/marketplace/interior/${id}`}
+            href={resolvedDetailsHref}
             className="flex-1"
           />
 

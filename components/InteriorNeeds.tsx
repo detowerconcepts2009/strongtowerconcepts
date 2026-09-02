@@ -16,6 +16,7 @@ interface CatalogueProduct {
   productType: "MATTRESS" | "PILLOW";
   name: string;
   description: string | null;
+  price: number | string | null;
   images: CatalogueImage[];
 }
 
@@ -26,66 +27,65 @@ interface CatalogueApiResponse {
 }
 
 interface MarketplaceProduct {
-  id: number;
+  id: string;
   name: string;
   category: string;
   price: string;
   featured?: boolean;
-  catalogueName?: string;
+  image?: string | null;
+  detailsHref: string;
 }
 
-const marketplaceProducts: MarketplaceProduct[] = [
+const staticMarketplaceProducts: MarketplaceProduct[] = [
   {
-    id: 1,
-    name: "Vita Supreme Mattress",
-    category: "Mattress",
-    price: "Select Size",
-    featured: true,
-    catalogueName: "Vita Supreme",
-  },
-  {
-    id: 2,
+    id: "bed-frame-6x6",
     name: "Luxury 6x6 Bed Frame",
     category: "Bedroom",
-    price: "₦420,000",
+    price: "₦420,000.00",
     featured: false,
+    image: null,
+    detailsHref:
+      "/marketplace/interior/bed-frame-6x6",
   },
   {
-    id: 3,
+    id: "l-shape-sofa",
     name: "Modern L-Shape Sofa",
     category: "Living Room",
-    price: "₦780,000",
+    price: "₦780,000.00",
     featured: true,
+    image: null,
+    detailsHref:
+      "/marketplace/interior/l-shape-sofa",
   },
 ];
 
-function findCatalogueProduct(
-  products: CatalogueProduct[],
-  catalogueName?: string
-) {
-  if (!catalogueName) {
-    return null;
+function formatCurrency(
+  value: number | string
+): string {
+  const numericValue =
+    typeof value === "number"
+      ? value
+      : Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return "Price unavailable";
   }
 
-  const searchName =
-    catalogueName.trim().toLowerCase();
+  return new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    maximumFractionDigits: 2,
+  }).format(numericValue);
+}
 
+function getPrimaryImage(
+  product: CatalogueProduct
+): string | null {
   return (
-    products.find(
-      (product) =>
-        product.name.trim().toLowerCase() ===
-        searchName
-    ) ??
-    products.find(
-      (product) =>
-        product.name
-          .trim()
-          .toLowerCase()
-          .includes(searchName) ||
-        searchName.includes(
-          product.name.trim().toLowerCase()
-        )
-    ) ??
+    product.images.find(
+      (image) => image.isPrimary
+    )?.imageUrl ??
+    product.images[0]?.imageUrl ??
     null
   );
 }
@@ -94,9 +94,16 @@ export default function InteriorNeeds() {
   const [catalogueProducts, setCatalogueProducts] =
     useState<CatalogueProduct[]>([]);
 
+  const [loading, setLoading] =
+    useState(true);
+
   useEffect(() => {
+    let mounted = true;
+
     async function loadCatalogueProducts() {
       try {
+        setLoading(true);
+
         const response = await fetch(
           "/api/catalogue/public",
           {
@@ -107,23 +114,76 @@ export default function InteriorNeeds() {
         const data: CatalogueApiResponse =
           await response.json();
 
-        if (!response.ok || !data.success) {
+        if (
+          !response.ok ||
+          !data.success
+        ) {
           return;
         }
 
-        setCatalogueProducts(
-          data.products || []
-        );
+        if (mounted) {
+          setCatalogueProducts(
+            data.products ?? []
+          );
+        }
       } catch (error) {
         console.error(
           "Marketplace catalogue loading error:",
           error
         );
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
 
     loadCatalogueProducts();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
+
+  const catalogueMarketplaceProducts =
+    catalogueProducts.map(
+      (product): MarketplaceProduct => {
+        const isMattress =
+          product.productType ===
+          "MATTRESS";
+
+        const isSupreme =
+          product.name
+            .toLowerCase()
+            .includes("supreme");
+
+        return {
+          id: product.id,
+          name: isMattress
+            ? `${product.name} Mattress`
+            : product.name,
+          category: isMattress
+            ? "Mattress"
+            : "Pillow",
+          price: isMattress
+            ? "Select Size"
+            : product.price !== null
+              ? formatCurrency(
+                  product.price
+                )
+              : "Price unavailable",
+          featured: isSupreme,
+          image:
+            getPrimaryImage(product),
+          detailsHref: `/marketplace/interior/${product.id}`,
+        };
+      }
+    );
+
+  const marketplaceProducts = [
+    ...catalogueMarketplaceProducts,
+    ...staticMarketplaceProducts,
+  ];
 
   return (
     <main className="bg-slate-50">
@@ -136,38 +196,42 @@ export default function InteriorNeeds() {
             buttonLink="/marketplace/interior"
           />
 
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {marketplaceProducts.map(
-              (product) => {
-                const catalogueProduct =
-                  findCatalogueProduct(
-                    catalogueProducts,
-                    product.catalogueName
-                  );
-
-                const primaryImage =
-                  catalogueProduct?.images.find(
-                    (image) =>
-                      image.isPrimary
-                  )?.imageUrl ??
-                  catalogueProduct?.images[0]
-                    ?.imageUrl ??
-                  null;
-
-                return (
+          {loading ? (
+            <div className="rounded-2xl bg-slate-50 p-8 text-center">
+              <p className="text-slate-500">
+                Loading interior products...
+              </p>
+            </div>
+          ) : marketplaceProducts.length ===
+            0 ? (
+            <div className="rounded-2xl bg-slate-50 p-8 text-center">
+              <p className="text-slate-500">
+                No interior products are
+                currently available.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {marketplaceProducts.map(
+                (product) => (
                   <ProductCard
                     key={product.id}
                     id={product.id}
                     name={product.name}
                     category={product.category}
                     price={product.price}
-                    featured={product.featured}
-                    image={primaryImage}
+                    featured={
+                      product.featured
+                    }
+                    image={product.image}
+                    detailsHref={
+                      product.detailsHref
+                    }
                   />
-                );
-              }
-            )}
-          </div>
+                )
+              )}
+            </div>
+          )}
         </div>
       </section>
 

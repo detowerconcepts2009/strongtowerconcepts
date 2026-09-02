@@ -16,6 +16,7 @@ export async function GET() {
           productType: true,
           name: true,
           description: true,
+          price: true,
           images: {
             orderBy: [
               {
