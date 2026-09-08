@@ -12,22 +12,23 @@ model User {
   lastName        String
   email           String        @unique
   phone           String        @unique
-  profileImageUrl String?
   passwordHash    String
   role            UserRole
   status          AccountStatus @default(PENDING)
   verified        Boolean       @default(false)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+  profileImageUrl String?
 
   businessPage      BusinessPage?
   favorites         Favorite[]
   identityDocuments IdentityDocument[]
   listings          Listing[]
-  reviews           Review[]
-  wallet            Wallet?
   notifications     Notification[]
+  reviews           Review[]
   sessions          Session[]
+  wallet            Wallet?
+  orders            Order[]
 }
 
 model Session {
@@ -242,12 +243,13 @@ model CatalogueProduct {
   productType CatalogueProductType
   name        String
   description String?
-  price       Decimal?
   active      Boolean              @default(true)
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
+  price       Decimal?
 
-  images CatalogueProductImage[]
+  images     CatalogueProductImage[]
+  orderItems OrderItem[]
 
   @@index([productType])
   @@index([active])
@@ -264,6 +266,74 @@ model CatalogueProductImage {
 
   @@index([productId])
   @@index([productId, isPrimary])
+}
+
+model Order {
+  id                String        @id @default(cuid())
+  orderNumber       String        @unique
+  userId            String?
+  customerFirstName String
+  customerLastName  String
+  customerEmail     String
+  customerPhone     String
+  deliveryAddress   String
+  deliveryCity      String
+  deliveryState     String
+  customerNotes     String?
+  subtotal          Decimal
+  totalAmount       Decimal
+  status            OrderStatus   @default(PENDING)
+  paymentStatus     PaymentStatus @default(UNPAID)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  user  User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items OrderItem[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([createdAt])
+  @@index([customerEmail])
+}
+
+model OrderItem {
+  id                 String   @id @default(cuid())
+  orderId            String
+  catalogueProductId String?
+  productName        String
+  productType        String
+  model              String?
+  lengthInches       Float?
+  widthInches        Float?
+  thicknessInches    Float?
+  unitPrice          Decimal
+  quantity           Int
+  lineTotal          Decimal
+  createdAt          DateTime @default(now())
+
+  order            Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  catalogueProduct CatalogueProduct? @relation(fields: [catalogueProductId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([catalogueProductId])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  READY_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
 }
 
 enum CatalogueProductType {

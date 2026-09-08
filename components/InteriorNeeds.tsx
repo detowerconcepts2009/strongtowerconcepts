@@ -44,8 +44,7 @@ const staticMarketplaceProducts: MarketplaceProduct[] = [
     price: "₦420,000.00",
     featured: false,
     image: null,
-    detailsHref:
-      "/marketplace/interior/bed-frame-6x6",
+    detailsHref: "/marketplace/interior/bed-frame-6x6",
   },
   {
     id: "l-shape-sofa",
@@ -54,18 +53,13 @@ const staticMarketplaceProducts: MarketplaceProduct[] = [
     price: "₦780,000.00",
     featured: true,
     image: null,
-    detailsHref:
-      "/marketplace/interior/l-shape-sofa",
+    detailsHref: "/marketplace/interior/l-shape-sofa",
   },
 ];
 
-function formatCurrency(
-  value: number | string
-): string {
+function formatCurrency(value: number | string): string {
   const numericValue =
-    typeof value === "number"
-      ? value
-      : Number(value);
+    typeof value === "number" ? value : Number(value);
 
   if (!Number.isFinite(numericValue)) {
     return "Price unavailable";
@@ -94,8 +88,7 @@ export default function InteriorNeeds() {
   const [catalogueProducts, setCatalogueProducts] =
     useState<CatalogueProduct[]>([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -114,17 +107,12 @@ export default function InteriorNeeds() {
         const data: CatalogueApiResponse =
           await response.json();
 
-        if (
-          !response.ok ||
-          !data.success
-        ) {
+        if (!response.ok || !data.success) {
           return;
         }
 
         if (mounted) {
-          setCatalogueProducts(
-            data.products ?? []
-          );
+          setCatalogueProducts(data.products ?? []);
         }
       } catch (error) {
         console.error(
@@ -149,8 +137,7 @@ export default function InteriorNeeds() {
     catalogueProducts.map(
       (product): MarketplaceProduct => {
         const isMattress =
-          product.productType ===
-          "MATTRESS";
+          product.productType === "MATTRESS";
 
         const isSupreme =
           product.name
@@ -168,14 +155,12 @@ export default function InteriorNeeds() {
           price: isMattress
             ? "Select Size"
             : product.price !== null
-              ? formatCurrency(
-                  product.price
-                )
+              ? formatCurrency(product.price)
               : "Price unavailable",
           featured: isSupreme,
-          image:
-            getPrimaryImage(product),
-          detailsHref: `/marketplace/interior/${product.id}`,
+          image: getPrimaryImage(product),
+          detailsHref:
+            `/marketplace/interior/${product.id}`,
         };
       }
     );
@@ -202,34 +187,26 @@ export default function InteriorNeeds() {
                 Loading interior products...
               </p>
             </div>
-          ) : marketplaceProducts.length ===
-            0 ? (
+          ) : marketplaceProducts.length === 0 ? (
             <div className="rounded-2xl bg-slate-50 p-8 text-center">
               <p className="text-slate-500">
-                No interior products are
-                currently available.
+                No interior products are currently available.
               </p>
             </div>
           ) : (
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {marketplaceProducts.map(
-                (product) => (
-                  <ProductCard
-                    key={product.id}
-                    id={product.id}
-                    name={product.name}
-                    category={product.category}
-                    price={product.price}
-                    featured={
-                      product.featured
-                    }
-                    image={product.image}
-                    detailsHref={
-                      product.detailsHref
-                    }
-                  />
-                )
-              )}
+              {marketplaceProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  category={product.category}
+                  price={product.price}
+                  featured={product.featured}
+                  image={product.image}
+                  detailsHref={product.detailsHref}
+                />
+              ))}
             </div>
           )}
         </div>

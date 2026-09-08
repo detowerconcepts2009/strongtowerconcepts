@@ -4,6 +4,7 @@ import Link from "next/link";
 import { use, useEffect, useMemo, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useCart } from "@/components/cart/CartProvider";
 import { mattressCatalogue } from "@/data/mattressCatalogue";
 
 interface Product {
@@ -13,8 +14,6 @@ interface Product {
   price?: number;
   description: string;
   features: string[];
-  catalogueName?: string;
-  catalogueProductId?: string;
 }
 
 interface PublicCatalogueImage {
@@ -55,23 +54,9 @@ interface UserResponse {
   user?: CurrentUser;
 }
 
-const legacyProducts: Product[] = [
+const staticProducts: Product[] = [
   {
-    id: "1",
-    name: "Vita Supreme Mattress",
-    category: "Mattress",
-    description:
-      "Premium Vitafoam mattress designed for comfort and support.",
-    features: [
-      "Premium comfort",
-      "Durable foam construction",
-      "Multiple dimensions available",
-      "Weight-based recommendation available",
-    ],
-    catalogueName: "Vita Supreme",
-  },
-  {
-    id: "2",
+    id: "bed-frame-6x6",
     name: "Luxury 6x6 Bed Frame",
     category: "Bedroom",
     price: 420000,
@@ -84,7 +69,7 @@ const legacyProducts: Product[] = [
     ],
   },
   {
-    id: "3",
+    id: "l-shape-sofa",
     name: "Modern L-Shape Sofa",
     category: "Living Room",
     price: 780000,
@@ -98,6 +83,12 @@ const legacyProducts: Product[] = [
   },
 ];
 
+/*
+ * Customer-facing mattress sizing convention.
+ *
+ * Original catalogue dimensions remain in inches internally
+ * so catalogue matching and pricing remain exact.
+ */
 const mattressSizeLabels: Record<number, string> = {
   30: "2½ ft",
   36: "3 ft",
@@ -113,13 +104,8 @@ const mattressSizeLabels: Record<number, string> = {
   84: "7 ft",
 };
 
-function formatMattressSize(
-  inches: number
-): string {
-  return (
-    mattressSizeLabels[inches] ??
-    `${inches}"`
-  );
+function formatMattressSize(inches: number): string {
+  return mattressSizeLabels[inches] ?? `${inches}"`;
 }
 
 function formatSizePair(
@@ -128,9 +114,7 @@ function formatSizePair(
 ): string {
   return `${lengthInches} × ${widthInches} (${formatMattressSize(
     lengthInches
-  )} × ${formatMattressSize(
-    widthInches
-  )})`;
+  )} × ${formatMattressSize(widthInches)})`;
 }
 
 function formatFullDimension(
@@ -140,14 +124,10 @@ function formatFullDimension(
 ): string {
   return `${lengthInches} × ${widthInches} × ${thicknessInches}" (${formatMattressSize(
     lengthInches
-  )} × ${formatMattressSize(
-    widthInches
-  )} × ${thicknessInches}")`;
+  )} × ${formatMattressSize(widthInches)} × ${thicknessInches}")`;
 }
 
-function formatCurrency(
-  value: number
-): string {
+function formatCurrency(value: number): string {
   return new Intl.NumberFormat("en-NG", {
     style: "currency",
     currency: "NGN",
@@ -155,9 +135,7 @@ function formatCurrency(
   }).format(value);
 }
 
-function isCatalogueManager(
-  role: string
-): boolean {
+function isCatalogueManager(role: string): boolean {
   return (
     role === "SUPER_ADMIN" ||
     role === "ADMIN" ||
@@ -165,20 +143,19 @@ function isCatalogueManager(
   );
 }
 
-function getPrimaryImage(
-  product: PublicCatalogueProduct | null
-): string | null {
-  if (!product) {
+function getCataloguePrice(
+  value: number | string | null | undefined
+): number | null {
+  if (value === null || value === undefined) {
     return null;
   }
 
-  return (
-    product.images.find(
-      (image) => image.isPrimary
-    )?.imageUrl ??
-    product.images[0]?.imageUrl ??
-    null
-  );
+  const numericValue =
+    typeof value === "number" ? value : Number(value);
+
+  return Number.isFinite(numericValue)
+    ? numericValue
+    : null;
 }
 
 export default function InteriorProductPage({
@@ -188,19 +165,13 @@ export default function InteriorProductPage({
 }) {
   const { id } = use(params);
 
-  const legacyProduct =
-    legacyProducts.find(
-      (item) => item.id === id
-    ) ?? null;
+  const { addItem } = useCart();
 
-  const [catalogueProducts, setCatalogueProducts] =
-    useState<PublicCatalogueProduct[]>([]);
+  const [cartMessage, setCartMessage] = useState("");
 
-  const [catalogueLoading, setCatalogueLoading] =
-    useState(true);
-
-  const [catalogueError, setCatalogueError] =
-    useState("");
+  const staticProduct = staticProducts.find(
+    (item) => item.id === id
+  );
 
   const [user, setUser] =
     useState<CurrentUser | null>(null);
@@ -208,6 +179,127 @@ export default function InteriorProductPage({
   const [userLoading, setUserLoading] =
     useState(true);
 
+  const [
+    catalogueProducts,
+    setCatalogueProducts,
+  ] = useState<PublicCatalogueProduct[]>([]);
+
+  const [
+    catalogueLoading,
+    setCatalogueLoading,
+  ] = useState(true);
+
+  /*
+   * Load the public catalogue.
+   *
+   * Catalogue products are the source of truth for
+   * customer-facing catalogue products such as mattresses
+   * and pillows.
+   */
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadCatalogueProducts() {
+      try {
+        setCatalogueLoading(true);
+
+        const response = await fetch(
+          "/api/catalogue/public",
+          {
+            cache: "no-store",
+          }
+        );
+
+        const data: PublicCatalogueResponse =
+          await response.json();
+
+        if (
+          !response.ok ||
+          !data.success
+        ) {
+          return;
+        }
+
+        if (mounted) {
+          setCatalogueProducts(
+            data.products ?? []
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Product catalogue loading error:",
+          error
+        );
+      } finally {
+        if (mounted) {
+          setCatalogueLoading(false);
+        }
+      }
+    }
+
+    loadCatalogueProducts();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  /*
+   * Resolve the requested catalogue product by ID.
+   *
+   * This allows products created through the dashboard
+   * to open directly from the marketplace without adding
+   * them manually to this page.
+   */
+  const catalogueProduct =
+    catalogueProducts.find(
+      (item) => item.id === id
+    ) ?? null;
+
+  const isMattress =
+    catalogueProduct?.productType === "MATTRESS" ||
+    staticProduct?.category === "Mattress";
+
+  const productName =
+    catalogueProduct?.productType === "MATTRESS"
+      ? `${catalogueProduct.name} Mattress`
+      : catalogueProduct?.name ??
+        staticProduct?.name ??
+        "";
+
+  const productCategory =
+    catalogueProduct?.productType === "MATTRESS"
+      ? "Mattress"
+      : catalogueProduct?.productType === "PILLOW"
+        ? "Pillow"
+        : staticProduct?.category ?? "";
+
+  const productDescription =
+    catalogueProduct?.description ??
+    staticProduct?.description ??
+    "";
+
+  const productPrice =
+    catalogueProduct
+      ? getCataloguePrice(catalogueProduct.price)
+      : staticProduct?.price ?? null;
+
+  const productFeatures =
+    catalogueProduct?.productType === "PILLOW"
+      ? [
+          "Quality interior comfort product",
+          "Suitable for everyday use",
+          "Catalogue-managed product",
+        ]
+      : staticProduct?.features ?? [];
+
+  /*
+   * Load current user.
+   *
+   * Failure to load the user does not block the
+   * customer marketplace. It only means that the
+   * admin shortcut will not be displayed.
+   */
   useEffect(() => {
     let mounted = true;
 
@@ -263,121 +355,12 @@ export default function InteriorProductPage({
     };
   }, []);
 
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadCatalogueProducts() {
-      try {
-        setCatalogueLoading(true);
-        setCatalogueError("");
-
-        const response = await fetch(
-          "/api/catalogue/public",
-          {
-            cache: "no-store",
-          }
-        );
-
-        const data: PublicCatalogueResponse =
-          await response.json();
-
-        if (
-          !response.ok ||
-          !data.success
-        ) {
-          throw new Error(
-            data.message ||
-              "Unable to load catalogue products."
-          );
-        }
-
-        if (mounted) {
-          setCatalogueProducts(
-            data.products ?? []
-          );
-        }
-      } catch (error) {
-        console.error(
-          "Product catalogue loading error:",
-          error
-        );
-
-        if (mounted) {
-          setCatalogueError(
-            error instanceof Error
-              ? error.message
-              : "Unable to load catalogue products."
-          );
-        }
-      } finally {
-        if (mounted) {
-          setCatalogueLoading(false);
-        }
-      }
-    }
-
-    loadCatalogueProducts();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  const catalogueProduct =
-    catalogueProducts.find(
-      (item) => item.id === id
-    ) ?? null;
-
-  const product =
-    catalogueProduct
-      ? {
-          id: catalogueProduct.id,
-          name:
-            catalogueProduct.productType ===
-            "MATTRESS"
-              ? `${catalogueProduct.name} Mattress`
-              : catalogueProduct.name,
-          category:
-            catalogueProduct.productType ===
-            "MATTRESS"
-              ? "Mattress"
-              : "Pillow",
-          description:
-            catalogueProduct.description ??
-            (catalogueProduct.productType ===
-            "MATTRESS"
-              ? "Premium mattress designed for comfort and support."
-              : "Quality pillow designed for comfort and restful sleep."),
-          features:
-            catalogueProduct.productType ===
-            "MATTRESS"
-              ? [
-                  "Premium comfort",
-                  "Durable foam construction",
-                  "Multiple dimensions available",
-                  "Weight-based recommendation available",
-                ]
-              : [
-                  "Comfort-focused design",
-                  "Quality construction",
-                  "Suitable for everyday use",
-                ],
-          catalogueName:
-            catalogueProduct.name,
-          catalogueProductId:
-            catalogueProduct.id,
-        }
-      : legacyProduct;
-
-  const isMattress =
-    product?.category === "Mattress";
-
-  const isCatalogueBacked =
-    catalogueProduct !== null;
-
-  const primaryImage = getPrimaryImage(
-    catalogueProduct
-  );
+  const primaryImage =
+    catalogueProduct?.images.find(
+      (image) => image.isPrimary
+    )?.imageUrl ??
+    catalogueProduct?.images[0]?.imageUrl ??
+    null;
 
   const mattressModels = useMemo(() => {
     return Array.from(
@@ -389,62 +372,17 @@ export default function InteriorProductPage({
     ).sort();
   }, []);
 
-  const defaultModel = useMemo(() => {
-    const preferredName =
-      catalogueProduct?.name ??
-      legacyProduct?.catalogueName ??
-      "";
+  const defaultModel =
+    mattressModels.find((model) =>
+      model.toLowerCase().includes("supreme")
+    ) ??
+    mattressModels[0] ??
+    "";
 
-    const preferredLower =
-      preferredName.toLowerCase();
-
-    const exactModel =
-      mattressModels.find(
-        (model) =>
-          model.toLowerCase() ===
-          preferredLower
-      );
-
-    if (exactModel) {
-      return exactModel;
-    }
-
-    const includedModel =
-      mattressModels.find(
-        (model) =>
-          preferredLower.includes(
-            model.toLowerCase()
-          ) ||
-          model
-            .toLowerCase()
-            .includes(preferredLower)
-      );
-
-    if (includedModel) {
-      return includedModel;
-    }
-
-    return (
-      mattressModels.find((model) =>
-        model
-          .toLowerCase()
-          .includes("supreme")
-      ) ??
-      mattressModels[0] ??
-      ""
-    );
-  }, [
-    catalogueProduct,
-    legacyProduct,
-    mattressModels,
-  ]);
-
-  const [selectedModel, setSelectedModel] =
-    useState("");
-
-  useEffect(() => {
-    setSelectedModel(defaultModel);
-  }, [defaultModel]);
+  const [
+    selectedModel,
+    setSelectedModel,
+  ] = useState(defaultModel);
 
   const modelCatalogue = useMemo(() => {
     return mattressCatalogue.filter(
@@ -560,8 +498,7 @@ export default function InteriorProductPage({
     )
       ? selectedThickness
       : thicknessOptions[0]
-          ?.thicknessInches ??
-        null;
+          ?.thicknessInches ?? null;
 
   const selectedCatalogueItem =
     thicknessOptions.find(
@@ -582,7 +519,32 @@ export default function InteriorProductPage({
       ? unitPrice * quantity
       : null;
 
-  if (!product) {
+  /*
+   * A product is valid if it exists either in the
+   * public catalogue or in the remaining static
+   * marketplace products.
+   */
+  const productExists =
+    catalogueProduct !== null ||
+    staticProduct !== undefined;
+
+  if (catalogueLoading && !staticProduct) {
+    return (
+      <main className="min-h-screen bg-slate-50">
+        <Navbar />
+
+        <section className="mx-auto max-w-4xl px-6 py-24 text-center">
+          <p className="text-slate-500">
+            Loading product...
+          </p>
+        </section>
+
+        <Footer />
+      </main>
+    );
+  }
+
+  if (!productExists) {
     return (
       <main className="min-h-screen bg-slate-50">
         <Navbar />
@@ -593,10 +555,8 @@ export default function InteriorProductPage({
           </h1>
 
           <p className="mt-4 text-slate-600">
-            {catalogueError ||
-              (catalogueLoading
-                ? "Loading product..."
-                : "The requested product could not be found.")}
+            The requested product could not be
+            found.
           </p>
 
           <Link
@@ -612,33 +572,20 @@ export default function InteriorProductPage({
     );
   }
 
-  const isPillow =
-    product.category === "Pillow";
-
-  const catalogueStoredPrice =
-    catalogueProduct?.price != null
-      ? Number(catalogueProduct.price)
-      : null;
-
-  const pillowTotal =
-    isPillow &&
-    catalogueStoredPrice !== null
-      ? catalogueStoredPrice * quantity
-      : null;
-
   return (
     <main className="min-h-screen bg-slate-50">
       <Navbar />
 
       <section className="mx-auto max-w-7xl px-6 py-16">
         <div className="grid gap-12 lg:grid-cols-2">
+
           {/* PRODUCT IMAGE */}
 
           <div className="relative flex min-h-[420px] items-center justify-center overflow-hidden rounded-3xl bg-slate-200">
             {primaryImage ? (
               <img
                 src={primaryImage}
-                alt={product.name}
+                alt={productName}
                 className="h-full w-full object-cover"
               />
             ) : (
@@ -654,11 +601,11 @@ export default function InteriorProductPage({
 
           <div>
             <p className="font-semibold uppercase tracking-wide text-blue-900">
-              {product.category}
+              {productCategory}
             </p>
 
             <h1 className="mt-3 text-4xl font-black text-blue-950 md:text-5xl">
-              {product.name}
+              {productName}
             </h1>
 
             {isMattress ? (
@@ -670,17 +617,17 @@ export default function InteriorProductPage({
               </p>
             ) : (
               <>
-                {catalogueStoredPrice !==
-                  null && (
-                  <p className="mt-6 text-4xl font-black text-blue-900">
-                    {formatCurrency(
-                      catalogueStoredPrice
-                    )}
-                  </p>
-                )}
+                <p className="mt-6 text-4xl font-black text-blue-900">
+                  {productPrice !== null
+                    ? formatCurrency(
+                        productPrice
+                      )
+                    : "Price unavailable"}
+                </p>
 
                 <p className="mt-6 text-lg leading-8 text-slate-600">
-                  {product.description}
+                  {productDescription ||
+                    "Quality interior product available through Strong Tower Concepts."}
                 </p>
               </>
             )}
@@ -692,7 +639,7 @@ export default function InteriorProductPage({
               isCatalogueManager(
                 user.role
               ) &&
-              isCatalogueBacked && (
+              catalogueProduct && (
                 <div className="mt-6 rounded-2xl border border-blue-200 bg-blue-50 p-5">
                   <p className="text-sm font-semibold text-blue-800">
                     Catalogue Administration
@@ -720,6 +667,7 @@ export default function InteriorProductPage({
             {isMattress && (
               <>
                 <div className="mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white p-6">
+
                   {/* MODEL */}
 
                   <div>
@@ -737,9 +685,11 @@ export default function InteriorProductPage({
                         setSelectedModel(
                           event.target.value
                         );
+
                         setSelectedDimensionKey(
                           ""
                         );
+
                         setSelectedThickness(
                           null
                         );
@@ -778,6 +728,7 @@ export default function InteriorProductPage({
                         setSelectedDimensionKey(
                           event.target.value
                         );
+
                         setSelectedThickness(
                           null
                         );
@@ -850,14 +801,23 @@ export default function InteriorProductPage({
                       }}
                       className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
                     >
-                      {thicknessOptions.map(
-                        (item) => (
+                      {thicknessOptions
+                        .filter(
+                          (
+                            item
+                          ): item is typeof item & {
+                            thicknessInches: number;
+                          } =>
+                            item.thicknessInches !=
+                            null
+                        )
+                        .map((item) => (
                           <option
                             key={
                               item.thicknessInches
                             }
                             value={
-                              item.thicknessInches ?? ""
+                              item.thicknessInches
                             }
                           >
                             {
@@ -865,8 +825,7 @@ export default function InteriorProductPage({
                             }
                             "
                           </option>
-                        )
-                      )}
+                        ))}
                     </select>
                   </div>
 
@@ -926,27 +885,103 @@ export default function InteriorProductPage({
                     </p>
 
                     <p className="mt-2 text-sm text-slate-300">
-                      VAT inclusive • Effective
+                      VAT inclusive · Effective
                       March 30, 2026
                     </p>
+                  </div>
 
-                    {quantity > 1 &&
-                      totalPrice !== null && (
-                        <div className="mt-4 border-t border-slate-700 pt-4">
-                          <p className="text-sm text-slate-300">
-                            Total for{" "}
-                            {quantity}{" "}
-                            mattresses
+                  {/* QUANTITY */}
+
+                  <div>
+                    <label
+                      htmlFor="mattress-quantity"
+                      className="block text-sm font-bold text-slate-800"
+                    >
+                      Quantity
+                    </label>
+
+                    <div className="mt-2 flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setQuantity(
+                            Math.max(
+                              1,
+                              quantity - 1
+                            )
+                          )
+                        }
+                        disabled={quantity <= 1}
+                        className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-300 bg-white text-xl font-bold text-slate-800 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                        aria-label="Decrease quantity"
+                      >
+                        −
+                      </button>
+
+                      <input
+                        id="mattress-quantity"
+                        type="number"
+                        min="1"
+                        value={quantity}
+                        onChange={(event) =>
+                          setQuantity(
+                            Math.max(
+                              1,
+                              Number(
+                                event.target
+                                  .value
+                              ) || 1
+                            )
+                          )
+                        }
+                        className="h-12 w-24 rounded-xl border border-slate-300 px-4 text-center font-semibold text-slate-900 outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setQuantity(
+                            quantity + 1
+                          )
+                        }
+                        className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-300 bg-white text-xl font-bold text-slate-800 transition hover:bg-slate-100"
+                        aria-label="Increase quantity"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* TOTAL */}
+
+                  {totalPrice !== null && (
+                    <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <p className="text-sm font-semibold text-blue-700">
+                            Total Price
                           </p>
 
-                          <p className="mt-1 text-2xl font-bold">
+                          <p className="mt-1 text-sm text-slate-600">
+                            {quantity}{" "}
+                            {quantity === 1
+                              ? "mattress"
+                              : "mattresses"}{" "}
+                            ×{" "}
                             {formatCurrency(
-                              totalPrice
+                              unitPrice ?? 0
                             )}
                           </p>
                         </div>
-                      )}
-                  </div>
+
+                        <p className="text-2xl font-black text-blue-950">
+                          {formatCurrency(
+                            totalPrice
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* BUY RIGHT */}
@@ -974,83 +1009,32 @@ export default function InteriorProductPage({
               </>
             )}
 
-            {/* PILLOW QUANTITY */}
-
-            {isPillow && (
-              <>
-                <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
-                  <h2 className="text-xl font-bold text-blue-950">
-                    Purchase Details
-                  </h2>
-
-                  <div className="mt-6">
-                    <label
-                      htmlFor="pillow-quantity"
-                      className="block text-sm font-semibold text-slate-800"
-                    >
-                      Quantity
-                    </label>
-
-                    <input
-                      id="pillow-quantity"
-                      type="number"
-                      min="1"
-                      value={quantity}
-                      onChange={(event) =>
-                        setQuantity(
-                          Math.max(
-                            1,
-                            Number(
-                              event.target.value
-                            ) || 1
-                          )
-                        )
-                      }
-                      className="mt-2 w-32 rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
-                    />
-                  </div>
-
-                  {pillowTotal !== null && (
-                    <div className="mt-6 rounded-2xl bg-slate-900 p-6 text-white">
-                      <p className="text-sm text-slate-300">
-                        Total
-                      </p>
-
-                      <p className="mt-2 text-3xl font-black">
-                        {formatCurrency(
-                          pillowTotal
-                        )}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
             {/* FEATURES */}
 
-            <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
-              <h2 className="text-xl font-bold text-blue-950">
-                Key Features
-              </h2>
+            {productFeatures.length > 0 && (
+              <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
+                <h2 className="text-xl font-bold text-blue-950">
+                  Key Features
+                </h2>
 
-              <ul className="mt-4 space-y-3">
-                {product.features.map(
-                  (feature) => (
-                    <li
-                      key={feature}
-                      className="flex items-start gap-3"
-                    >
-                      <span className="mt-2 h-2 w-2 rounded-full bg-blue-900" />
+                <ul className="mt-4 space-y-3">
+                  {productFeatures.map(
+                    (feature) => (
+                      <li
+                        key={feature}
+                        className="flex items-start gap-3"
+                      >
+                        <span className="mt-2 h-2 w-2 rounded-full bg-blue-900" />
 
-                      <span className="text-slate-700">
-                        {feature}
-                      </span>
-                    </li>
-                  )
-                )}
-              </ul>
-            </div>
+                        <span className="text-slate-700">
+                          {feature}
+                        </span>
+                      </li>
+                    )
+                  )}
+                </ul>
+              </div>
+            )}
 
             {/* ACTIONS */}
 
@@ -1068,11 +1052,69 @@ export default function InteriorProductPage({
                   isMattress &&
                   !selectedCatalogueItem
                 }
+                onClick={() => {
+                  if (isMattress) {
+                    if (!selectedCatalogueItem) {
+                      return;
+                    }
+
+                    addItem({
+                      id: `${catalogueProduct?.id ?? id}-${selectedCatalogueItem.model}-${selectedCatalogueItem.lengthInches}-${selectedCatalogueItem.widthInches}-${selectedCatalogueItem.thicknessInches}`,
+                      productId:
+                        catalogueProduct?.id ?? id,
+                      productName,
+                      productType: "MATTRESS",
+                      image: primaryImage,
+                      model:
+                        selectedCatalogueItem.model,
+                      lengthInches:
+                        selectedCatalogueItem.lengthInches ?? undefined,
+                      widthInches:
+                        selectedCatalogueItem.widthInches ?? undefined,
+                      thicknessInches:
+                        selectedCatalogueItem.thicknessInches ?? undefined,
+                      unitPrice:
+                        selectedCatalogueItem.price ?? 0,
+                      quantity,
+                    });
+                  } else {
+                    if (productPrice === null) {
+                      return;
+                    }
+
+                    addItem({
+                      id: catalogueProduct?.id ?? id,
+                      productId:
+                        catalogueProduct?.id ?? id,
+                      productName,
+                      productType:
+                        catalogueProduct?.productType ??
+                        "OTHER",
+                      image: primaryImage,
+                      unitPrice: productPrice,
+                      quantity: 1,
+                    });
+                  }
+
+                  setCartMessage(
+                    "Added to cart successfully."
+                  );
+
+                  window.setTimeout(() => {
+                    setCartMessage("");
+                  }, 3000);
+                }}
                 className="rounded-xl bg-blue-900 px-6 py-3 font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Add to Cart
               </button>
             </div>
+
+            {cartMessage && (
+              <div className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
+                {cartMessage}
+              </div>
+            )}
           </div>
         </div>
       </section>
