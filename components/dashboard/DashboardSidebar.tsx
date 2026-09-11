@@ -13,6 +13,7 @@ import {
   FaGift,
   FaCog,
   FaBoxes,
+  FaShoppingCart,
   FaSignOutAlt,
   FaTimes,
 } from "react-icons/fa";
@@ -44,6 +45,11 @@ const menus = [
     name: "Catalogue",
     icon: FaBoxes,
     href: "/dashboard/catalogue",
+  },
+  {
+    name: "Orders",
+    icon: FaShoppingCart,
+    href: "/dashboard/orders",
   },
   {
     name: "Users",
