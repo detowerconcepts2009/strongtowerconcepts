@@ -26,7 +26,113 @@ const allowedMimeTypes = [
   "application/pdf",
 ];
 
-export async function POST(request: NextRequest) {
+const REFERRAL_REWARD_POINTS = 1000;
+
+function generateReferralCode() {
+  const characters =
+    "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+  let code = "STC";
+
+  for (let i = 0; i < 5; i++) {
+    code += characters.charAt(
+      Math.floor(Math.random() * characters.length)
+    );
+  }
+
+  return code;
+}
+
+async function generateUniqueReferralCode(
+  tx: any
+) {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const code = generateReferralCode();
+
+    const existing = await tx.user.findFirst({
+      where: {
+        referralCode: code,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!existing) {
+      return code;
+    }
+  }
+
+  throw new Error(
+    "Unable to generate a unique referral code."
+  );
+}
+
+async function generateUniqueStcUserNumber(
+  tx: any
+) {
+  const users = await tx.user.findMany({
+    where: {
+      stcUserNumber: {
+        not: null,
+      },
+    },
+    select: {
+      stcUserNumber: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  let highestNumber = 0;
+
+  for (const user of users) {
+    if (!user.stcUserNumber) continue;
+
+    const match =
+      user.stcUserNumber.match(/^STC-(\d+)$/);
+
+    if (match) {
+      const number = Number(match[1]);
+
+      if (
+        Number.isFinite(number) &&
+        number > highestNumber
+      ) {
+        highestNumber = number;
+      }
+    }
+  }
+
+  for (let attempt = 1; attempt <= 20; attempt++) {
+    const candidate =
+      `STC-${String(
+        highestNumber + attempt
+      ).padStart(6, "0")}`;
+
+    const existing = await tx.user.findFirst({
+      where: {
+        stcUserNumber: candidate,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!existing) {
+      return candidate;
+    }
+  }
+
+  throw new Error(
+    "Unable to generate a unique STC User Number."
+  );
+}
+
+export async function POST(
+  request: NextRequest
+) {
   let savedFilePath: string | null = null;
 
   try {
@@ -65,6 +171,12 @@ export async function POST(request: NextRequest) {
     const documentNumber = String(
       formData.get("documentNumber") || ""
     ).trim();
+
+    const referralCodeInput = String(
+      formData.get("referralCode") || ""
+    )
+      .trim()
+      .toUpperCase();
 
     const documentFile = formData.get(
       "documentFile"
@@ -123,7 +235,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: "Invalid identity document type.",
+          message:
+            "Invalid identity document type.",
         },
         { status: 400 }
       );
@@ -133,7 +246,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: "The selected identity document is empty.",
+          message:
+            "The selected identity document is empty.",
         },
         { status: 400 }
       );
@@ -150,7 +264,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!allowedMimeTypes.includes(documentFile.type)) {
+    if (
+      !allowedMimeTypes.includes(
+        documentFile.type
+      )
+    ) {
       return NextResponse.json(
         {
           success: false,
@@ -189,50 +307,114 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: "Phone number already exists.",
+          message:
+            "Phone number already exists.",
         },
         { status: 409 }
       );
     }
 
     /*
+     * Validate referral code before saving
+     * the identity document.
+     */
+    let referrerId: string | null = null;
+
+    if (referralCodeInput) {
+      const referrer =
+        await prisma.user.findFirst({
+          where: {
+            referralCode:
+              referralCodeInput,
+          },
+          select: {
+            id: true,
+            status: true,
+          },
+        });
+
+      if (!referrer) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "The referral code entered is invalid.",
+          },
+          { status: 400 }
+        );
+      }
+
+      if (
+        referrer.status === "BLOCKED" ||
+        referrer.status === "SUSPENDED"
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "This referral code is no longer active.",
+          },
+          { status: 400 }
+        );
+      }
+
+      referrerId = referrer.id;
+    }
+
+    /*
      * Save identity document
      */
 
-    const uploadDirectory = path.join(
-      process.cwd(),
-      "public",
-      "uploads",
-      "identity"
+    const uploadDirectory =
+      path.join(
+        process.cwd(),
+        "public",
+        "uploads",
+        "identity"
+      );
+
+    await fs.mkdir(
+      uploadDirectory,
+      {
+        recursive: true,
+      }
     );
 
-    await fs.mkdir(uploadDirectory, {
-      recursive: true,
-    });
-
     const originalName =
-      documentFile.name || "identity-document";
+      documentFile.name ||
+      "identity-document";
 
     const extension =
-      path.extname(originalName).toLowerCase() ||
-      ".bin";
+      path.extname(
+        originalName
+      ).toLowerCase() || ".bin";
 
     const safeBaseName =
       path
-        .basename(originalName, extension)
-        .replace(/[^a-zA-Z0-9-_]/g, "-")
-        .slice(0, 80) || "identity-document";
+        .basename(
+          originalName,
+          extension
+        )
+        .replace(
+          /[^a-zA-Z0-9-_]/g,
+          "-"
+        )
+        .slice(0, 80) ||
+      "identity-document";
 
-    const uniqueFileName = `${Date.now()}-${crypto.randomUUID()}-${safeBaseName}${extension}`;
+    const uniqueFileName =
+      `${Date.now()}-${crypto.randomUUID()}-${safeBaseName}${extension}`;
 
-    savedFilePath = path.join(
-      uploadDirectory,
-      uniqueFileName
-    );
+    savedFilePath =
+      path.join(
+        uploadDirectory,
+        uniqueFileName
+      );
 
-    const fileBuffer = Buffer.from(
-      await documentFile.arrayBuffer()
-    );
+    const fileBuffer =
+      Buffer.from(
+        await documentFile.arrayBuffer()
+      );
 
     await fs.writeFile(
       savedFilePath,
@@ -247,58 +429,98 @@ export async function POST(request: NextRequest) {
      */
 
     const passwordHash =
-      await bcrypt.hash(password, 12);
+      await bcrypt.hash(
+        password,
+        12
+      );
 
-    const user = await prisma.$transaction(
-      async (tx) => {
-        const newUser =
-          await tx.user.create({
-            data: {
-              firstName,
-              lastName,
-              email,
-              phone,
-              passwordHash,
-              role:
-                accountType as (typeof allowedRoles)[number],
-              status: "PENDING",
-              verified: false,
-            },
-          });
+    const user =
+      await prisma.$transaction(
+        async (tx) => {
+          const stcUserNumber =
+            await generateUniqueStcUserNumber(
+              tx
+            );
 
-        await tx.identityDocument.create({
-          data: {
-            userId: newUser.id,
-            documentType:
-              documentType as (typeof allowedDocumentTypes)[number],
-            documentNumber:
-              documentNumber || null,
-            fileUrl: documentUrl,
-            verificationStatus: "PENDING",
-          },
-        });
+          const referralCode =
+            await generateUniqueReferralCode(
+              tx
+            );
 
-        const wallet =
-          await tx.wallet.create({
+          const newUser =
+            await tx.user.create({
+              data: {
+                firstName,
+                lastName,
+                email,
+                phone,
+                passwordHash,
+                role:
+                  accountType as (typeof allowedRoles)[number],
+                status: "PENDING",
+                verified: false,
+                stcUserNumber,
+                referralCode,
+                referredById:
+                  referrerId,
+              },
+            });
+
+          await tx.identityDocument.create({
             data: {
               userId: newUser.id,
-              balance: 1000,
+              documentType:
+                documentType as (typeof allowedDocumentTypes)[number],
+              documentNumber:
+                documentNumber || null,
+              fileUrl: documentUrl,
+              verificationStatus:
+                "PENDING",
             },
           });
 
-        await tx.walletTransaction.create({
-          data: {
-            walletId: wallet.id,
-            reference: `WELCOME-${Date.now()}`,
-            type: "DEPOSIT",
-            status: "SUCCESS",
-            amount: 1000,
-          },
-        });
+          const wallet =
+            await tx.wallet.create({
+              data: {
+                userId: newUser.id,
+                balance: 1000,
+              },
+            });
 
-        return newUser;
-      }
-    );
+          await tx.walletTransaction.create({
+            data: {
+              walletId: wallet.id,
+              reference:
+                `WELCOME-${Date.now()}-${crypto.randomUUID()}`,
+              type: "DEPOSIT",
+              status: "SUCCESS",
+              amount: 1000,
+            },
+          });
+
+          await tx.pointsWallet.create({
+            data: {
+              userId: newUser.id,
+              balance: 0,
+            },
+          });
+
+          if (referrerId) {
+            await tx.referral.create({
+              data: {
+                referrerId,
+                referredUserId:
+                  newUser.id,
+                status: "PENDING",
+                rewardPoints:
+                  REFERRAL_REWARD_POINTS,
+              },
+            });
+          }
+
+          return newUser;
+        }
+      );
 
     return NextResponse.json(
       {
@@ -306,8 +528,19 @@ export async function POST(request: NextRequest) {
         message:
           "Registration submitted successfully. Your identity document is pending verification.",
         userId: user.id,
+        stcUserNumber:
+          user.stcUserNumber,
+        referralCode:
+          user.referralCode,
+        referred:
+          Boolean(referrerId),
         welcomeBonus: 1000,
-        verificationStatus: "PENDING",
+        referralRewardPoints:
+          referrerId
+            ? REFERRAL_REWARD_POINTS
+            : 0,
+        verificationStatus:
+          "PENDING",
         documentUrl,
       },
       { status: 201 }
@@ -320,7 +553,9 @@ export async function POST(request: NextRequest) {
 
     if (savedFilePath) {
       try {
-        await fs.unlink(savedFilePath);
+        await fs.unlink(
+          savedFilePath
+        );
       } catch {
         // Ignore cleanup errors.
       }

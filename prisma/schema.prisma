@@ -19,6 +19,9 @@ model User {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   profileImageUrl String?
+  stcUserNumber String?
+  referralCode  String?
+  referredById    String?
 
   businessPage      BusinessPage?
   favorites         Favorite[]
@@ -29,6 +32,63 @@ model User {
   sessions          Session[]
   wallet            Wallet?
   orders            Order[]
+  referralsSent     Referral[]       @relation("Referrer")
+  referralReceived  Referral?        @relation("ReferredUser")
+  pointsWallet      PointsWallet?
+  pointsTransactions PointsTransaction[]
+
+  referredBy User? @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals User[] @relation("UserReferrals")
+}
+
+model Referral {
+  id             String         @id @default(cuid())
+  referrerId     String
+  referredUserId String         @unique
+  status         ReferralStatus @default(PENDING)
+  rewardPoints   Int            @default(1000)
+  qualifyingAction String?
+  rewardedAt     DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  referrer     User @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredUser User @relation("ReferredUser", fields: [referredUserId], references: [id], onDelete: Cascade)
+
+  @@index([referrerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model PointsWallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  balance   Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions PointsTransaction[]
+}
+
+model PointsTransaction {
+  id          String              @id @default(cuid())
+  walletId    String
+  userId      String
+  reference   String              @unique
+  type        PointsTransactionType
+  status      PointsTransactionStatus @default(SUCCESS)
+  amount      Int
+  description String
+  createdAt   DateTime            @default(now())
+
+  wallet PointsWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([walletId])
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
 }
 
 model Session {
@@ -371,6 +431,28 @@ enum IdentityDocumentType {
   CAC_DOCUMENT
 }
 
+enum ReferralStatus {
+  PENDING
+  QUALIFIED
+  REWARDED
+  REJECTED
+}
+
+enum PointsTransactionType {
+  REFERRAL_REWARD
+  SERVICE_REDEMPTION
+  PRODUCT_DISCOUNT
+  ADJUSTMENT
+  REVERSAL
+}
+
+enum PointsTransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
 enum WalletTransactionType {
   DEPOSIT
   PAYMENT
@@ -437,3 +519,4 @@ enum PropertyPurpose {
   RENT
   SHORTLET
 }
+

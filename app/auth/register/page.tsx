@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Eye,
   EyeOff,
@@ -27,6 +27,7 @@ interface RegisterForm {
   accountType: string;
   documentType: string;
   documentNumber: string;
+  referralCode: string;
   documentFile: File | null;
 }
 
@@ -40,6 +41,7 @@ const initialForm: RegisterForm = {
   accountType: "",
   documentType: "",
   documentNumber: "",
+  referralCode: "",
   documentFile: null,
 };
 
@@ -58,6 +60,23 @@ export default function RegisterPage() {
 
   const [form, setForm] =
     useState<RegisterForm>(initialForm);
+
+  /*
+   * Capture a referral code from the registration URL.
+   * Example:
+   * /auth/register?ref=STC7K4P2
+   */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const referralCode = params.get("ref")?.trim().toUpperCase();
+
+    if (referralCode) {
+      setForm((current) => ({
+        ...current,
+        referralCode,
+      }));
+    }
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -277,6 +296,13 @@ export default function RegisterPage() {
         "documentNumber",
         form.documentNumber.trim()
       );
+
+      if (form.referralCode.trim()) {
+        formData.append(
+          "referralCode",
+          form.referralCode.trim().toUpperCase()
+        );
+      }
 
       formData.append(
         "documentFile",
@@ -529,6 +555,31 @@ export default function RegisterPage() {
                   autoComplete="tel"
                   className="w-full rounded-xl border border-slate-300 py-3 pl-11 pr-4 outline-none focus:ring-2 focus:ring-blue-700"
                 />
+              </div>
+
+              {/* REFERRAL CODE */}
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
+                  Referral Code{" "}
+                  <span className="font-normal text-slate-400">
+                    (Optional)
+                  </span>
+                </label>
+
+                <input
+                  name="referralCode"
+                  value={form.referralCode}
+                  onChange={handleChange}
+                  placeholder="Enter referral code"
+                  autoCapitalize="characters"
+                  className="w-full rounded-xl border border-slate-300 p-3 uppercase outline-none focus:ring-2 focus:ring-blue-700"
+                />
+
+                <p className="mt-2 text-xs text-slate-500">
+                  Have an STC referral code? Enter it here to link
+                  your account to your referrer.
+                </p>
               </div>
 
               {/* PASSWORD */}
@@ -843,6 +894,13 @@ export default function RegisterPage() {
                   <strong>Account Type:</strong>{" "}
                   {form.accountType}
                 </p>
+
+                {form.referralCode && (
+                  <p>
+                    <strong>Referral Code:</strong>{" "}
+                    {form.referralCode.toUpperCase()}
+                  </p>
+                )}
 
                 <p>
                   <strong>Document Type:</strong>{" "}
