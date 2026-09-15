@@ -93,17 +93,164 @@ export async function PATCH(
       );
     }
 
-    const existingOrder = await prisma.order.findUnique({
-      where: {
-        id,
-      },
-      select: {
-        id: true,
-        orderNumber: true,
-      },
+    const result = await prisma.$transaction(async (tx) => {
+      const existingOrder = await tx.order.findUnique({
+        where: {
+          id,
+        },
+        select: {
+          id: true,
+          orderNumber: true,
+          userId: true,
+          status: true,
+          paymentStatus: true,
+        },
+      });
+
+      if (!existingOrder) {
+        return {
+          notFound: true as const,
+        };
+      }
+
+      const updateData: {
+        status?: OrderStatus;
+        paymentStatus?: PaymentStatus;
+      } = {};
+
+      if (orderStatus) {
+        updateData.status = orderStatus;
+      }
+
+      if (paymentStatus) {
+        updateData.paymentStatus = paymentStatus;
+      }
+
+      const updatedOrder = await tx.order.update({
+        where: {
+          id,
+        },
+        data: updateData,
+        select: {
+          id: true,
+          orderNumber: true,
+          status: true,
+          paymentStatus: true,
+          updatedAt: true,
+        },
+      });
+
+      let referralRewarded = false;
+      let referralRewardPoints = 0;
+
+      /*
+       * Referral qualification:
+       *
+       * A referred customer qualifies when their first STC
+       * order becomes PAID.
+       *
+       * The reward is processed only when the order changes
+       * from a non-PAID state to PAID.
+       */
+      const becamePaid =
+        paymentStatus === "PAID" &&
+        existingOrder.paymentStatus !== "PAID";
+
+      if (becamePaid && existingOrder.userId) {
+        const referral = await tx.referral.findUnique({
+          where: {
+            referredUserId: existingOrder.userId,
+          },
+          select: {
+            id: true,
+            referrerId: true,
+            referredUserId: true,
+            status: true,
+            rewardPoints: true,
+          },
+        });
+
+        if (
+          referral &&
+          referral.status === "PENDING"
+        ) {
+          /*
+           * First mark the referral as QUALIFIED.
+           * This happens inside the same transaction as the
+           * points credit, so an error rolls everything back.
+           */
+          await tx.referral.update({
+            where: {
+              id: referral.id,
+            },
+            data: {
+              status: "QUALIFIED",
+              qualifyingAction: `FIRST_PAID_ORDER:${existingOrder.orderNumber}`,
+            },
+          });
+
+          const pointsWallet = await tx.pointsWallet.upsert({
+            where: {
+              userId: referral.referrerId,
+            },
+            create: {
+              userId: referral.referrerId,
+              balance: 0,
+            },
+            update: {},
+          });
+
+          const transactionReference =
+            `REFERRAL-${referral.id}`;
+
+          await tx.pointsTransaction.create({
+            data: {
+              walletId: pointsWallet.id,
+              userId: referral.referrerId,
+              reference: transactionReference,
+              type: "REFERRAL_REWARD",
+              status: "SUCCESS",
+              amount: referral.rewardPoints,
+              description:
+                `Referral reward for referring a customer who completed their first successful STC order (${existingOrder.orderNumber}).`,
+            },
+          });
+
+          await tx.pointsWallet.update({
+            where: {
+              id: pointsWallet.id,
+            },
+            data: {
+              balance: {
+                increment: referral.rewardPoints,
+              },
+            },
+          });
+
+          await tx.referral.update({
+            where: {
+              id: referral.id,
+            },
+            data: {
+              status: "REWARDED",
+              rewardedAt: new Date(),
+            },
+          });
+
+          referralRewarded = true;
+          referralRewardPoints = referral.rewardPoints;
+        }
+      }
+
+      return {
+        notFound: false as const,
+        updatedOrder,
+        referralRewarded,
+        referralRewardPoints,
+      };
     });
 
-    if (!existingOrder) {
+    if (result.notFound) {
       return NextResponse.json(
         {
           success: false,
@@ -113,38 +260,15 @@ export async function PATCH(
       );
     }
 
-    const updateData: {
-      status?: OrderStatus;
-      paymentStatus?: PaymentStatus;
-    } = {};
-
-    if (orderStatus) {
-      updateData.status = orderStatus;
-    }
-
-    if (paymentStatus) {
-      updateData.paymentStatus = paymentStatus;
-    }
-
-    const updatedOrder = await prisma.order.update({
-      where: {
-        id,
-      },
-      data: updateData,
-      select: {
-        id: true,
-        orderNumber: true,
-        status: true,
-        paymentStatus: true,
-        updatedAt: true,
-      },
-    });
-
     return NextResponse.json(
       {
         success: true,
-        message: "Order status updated successfully.",
-        order: updatedOrder,
+        message: result.referralRewarded
+          ? `Order updated successfully. ${result.referralRewardPoints} STC Points awarded for the successful referral.`
+          : "Order status updated successfully.",
+        order: result.updatedOrder,
+        referralRewarded: result.referralRewarded,
+        referralRewardPoints: result.referralRewardPoints,
       },
       { status: 200 }
     );
