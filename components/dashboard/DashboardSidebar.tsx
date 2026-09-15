@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import {
   FaHome,
@@ -14,13 +15,49 @@ import {
   FaCog,
   FaBoxes,
   FaShoppingCart,
+  FaUser,
   FaSignOutAlt,
   FaTimes,
+  FaStore,
 } from "react-icons/fa";
 
 import { useDashboard } from "./context/DashboardContext";
 
-const menus = [
+interface MenuItem {
+  name: string;
+  icon: typeof FaHome;
+  href: string;
+}
+
+const customerMenus: MenuItem[] = [
+  {
+    name: "Dashboard",
+    icon: FaHome,
+    href: "/dashboard",
+  },
+  {
+    name: "Shop Catalogue",
+    icon: FaStore,
+    href: "/marketplace/interior",
+  },
+  {
+    name: "My Orders",
+    icon: FaShoppingCart,
+    href: "/dashboard/my-orders",
+  },
+  {
+    name: "My Profile",
+    icon: FaUser,
+    href: "/dashboard/profile",
+  },
+  {
+    name: "Settings",
+    icon: FaCog,
+    href: "/dashboard/settings",
+  },
+];
+
+const managementMenus: MenuItem[] = [
   {
     name: "Dashboard",
     icon: FaHome,
@@ -75,11 +112,46 @@ const menus = [
 
 export default function DashboardSidebar() {
   const router = useRouter();
+  const pathname = usePathname();
+  const { sidebarOpen, closeSidebar } = useDashboard();
 
-  const {
-    sidebarOpen,
-    closeSidebar,
-  } = useDashboard();
+  const [role, setRole] = useState("");
+  const [fullName, setFullName] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadUser() {
+      try {
+        const response = await fetch("/api/user/me", {
+          cache: "no-store",
+        });
+
+        const data = await response.json();
+
+        if (
+          mounted &&
+          response.ok &&
+          data.success &&
+          data.user
+        ) {
+          setRole(data.user.role || "");
+          setFullName(data.user.fullName || "");
+        }
+      } catch (error) {
+        console.error(
+          "Dashboard user loading error:",
+          error
+        );
+      }
+    }
+
+    loadUser();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   async function handleLogout() {
     try {
@@ -87,28 +159,29 @@ export default function DashboardSidebar() {
         method: "POST",
       });
     } catch (error) {
-      console.error(
-        "Logout error:",
-        error
-      );
+      console.error("Logout error:", error);
     } finally {
       router.replace("/login");
       router.refresh();
     }
   }
 
+  const isCustomer = role === "CUSTOMER";
+  const menus = isCustomer
+    ? customerMenus
+    : managementMenus;
+
+  const dashboardName =
+    fullName || "My Account";
+
   return (
     <>
-      {/* MOBILE OVERLAY */}
-
       {sidebarOpen && (
         <div
           onClick={closeSidebar}
           className="fixed inset-0 z-40 bg-black/50 xl:hidden"
         />
       )}
-
-      {/* SIDEBAR */}
 
       <aside
         className={`fixed left-0 top-0 z-50 flex h-screen w-72 flex-col overflow-y-auto bg-blue-950 text-white transition-transform duration-300 ${
@@ -117,8 +190,6 @@ export default function DashboardSidebar() {
             : "-translate-x-full"
         } xl:translate-x-0`}
       >
-        {/* MOBILE CLOSE BUTTON */}
-
         <div className="flex justify-end p-4 xl:hidden">
           <button
             type="button"
@@ -129,8 +200,6 @@ export default function DashboardSidebar() {
             <FaTimes size={20} />
           </button>
         </div>
-
-        {/* LOGO */}
 
         <div className="border-b border-blue-800 p-6">
           <Link
@@ -144,40 +213,48 @@ export default function DashboardSidebar() {
               className="h-14 w-14 object-contain"
             />
 
-            <div>
-              <h1 className="text-lg font-bold">
-                Strong Tower
+            <div className="min-w-0">
+              <h1 className="truncate text-lg font-bold">
+                {dashboardName}
               </h1>
 
               <p className="text-sm text-blue-200">
-                Dealer Dashboard
+                {isCustomer
+                  ? "Customer Dashboard"
+                  : "Dealer Dashboard"}
               </p>
             </div>
           </Link>
         </div>
 
-        {/* MENU */}
-
         <nav className="flex-1 p-4">
           {menus.map((menu) => {
             const Icon = menu.icon;
+
+            const active =
+              pathname === menu.href ||
+              (menu.href !== "/dashboard" &&
+                pathname.startsWith(
+                  `${menu.href}/`
+                ));
 
             return (
               <Link
                 key={menu.name}
                 href={menu.href}
                 onClick={closeSidebar}
-                className="mb-2 flex items-center gap-4 rounded-xl px-4 py-3 transition hover:bg-blue-800"
+                className={`mb-2 flex items-center gap-4 rounded-xl px-4 py-3 transition ${
+                  active
+                    ? "bg-blue-800 text-white"
+                    : "text-blue-100 hover:bg-blue-800"
+                }`}
               >
                 <Icon className="text-lg" />
-
                 <span>{menu.name}</span>
               </Link>
             );
           })}
         </nav>
-
-        {/* LOGOUT */}
 
         <div className="border-t border-blue-800 p-4">
           <button
@@ -186,7 +263,6 @@ export default function DashboardSidebar() {
             className="flex w-full items-center gap-4 rounded-xl px-4 py-3 transition hover:bg-red-700"
           >
             <FaSignOutAlt />
-
             Logout
           </button>
         </div>

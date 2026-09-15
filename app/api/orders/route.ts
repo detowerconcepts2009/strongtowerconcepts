@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 interface OrderItemInput {
@@ -34,6 +35,8 @@ function generateOrderNumber(): string {
 
 export async function POST(request: Request) {
   try {
+    const currentUser = await getCurrentUser();
+
     const body = (await request.json()) as OrderRequest;
 
     if (
@@ -48,13 +51,17 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "Please complete all required customer and delivery information.",
+          message:
+            "Please complete all required customer and delivery information.",
         },
         { status: 400 }
       );
     }
 
-    if (!Array.isArray(body.items) || body.items.length === 0) {
+    if (
+      !Array.isArray(body.items) ||
+      body.items.length === 0
+    ) {
       return NextResponse.json(
         {
           success: false,
@@ -72,37 +79,44 @@ export async function POST(request: Request) {
       ),
     ];
 
-    const products = await prisma.catalogueProduct.findMany({
-      where: {
-        id: {
-          in: productIds,
-        },
-        active: true,
-      },
-      include: {
-        images: {
-          where: {
-            isPrimary: true,
+    const products =
+      await prisma.catalogueProduct.findMany({
+        where: {
+          id: {
+            in: productIds,
           },
-          take: 1,
+          active: true,
         },
-      },
-    });
+        include: {
+          images: {
+            where: {
+              isPrimary: true,
+            },
+            take: 1,
+          },
+        },
+      });
 
     const productMap = new Map(
-      products.map((product) => [product.id, product])
+      products.map((product) => [
+        product.id,
+        product,
+      ])
     );
 
     const orderItems = [];
 
     for (const item of body.items) {
-      const product = productMap.get(item.productId);
+      const product = productMap.get(
+        item.productId
+      );
 
       if (!product) {
         return NextResponse.json(
           {
             success: false,
-            message: "One or more products in your cart are no longer available.",
+            message:
+              "One or more products in your cart are no longer available.",
           },
           { status: 400 }
         );
@@ -110,7 +124,10 @@ export async function POST(request: Request) {
 
       const quantity = Number(item.quantity);
 
-      if (!Number.isInteger(quantity) || quantity <= 0) {
+      if (
+        !Number.isInteger(quantity) ||
+        quantity <= 0
+      ) {
         return NextResponse.json(
           {
             success: false,
@@ -157,29 +174,45 @@ export async function POST(request: Request) {
     }
 
     const subtotal = orderItems.reduce(
-      (total, item) => total + Number(item.lineTotal),
+      (total, item) =>
+        total + Number(item.lineTotal),
       0
     );
 
     const order = await prisma.order.create({
       data: {
         orderNumber: generateOrderNumber(),
-        customerFirstName: body.customerFirstName.trim(),
-        customerLastName: body.customerLastName.trim(),
-        customerEmail: body.customerEmail.trim().toLowerCase(),
-        customerPhone: body.customerPhone.trim(),
-        deliveryAddress: body.deliveryAddress.trim(),
-        deliveryCity: body.deliveryCity.trim(),
-        deliveryState: body.deliveryState.trim(),
-        customerNotes: body.customerNotes?.trim() || null,
+
+        userId: currentUser?.id ?? null,
+
+        customerFirstName:
+          body.customerFirstName.trim(),
+        customerLastName:
+          body.customerLastName.trim(),
+        customerEmail:
+          body.customerEmail.trim().toLowerCase(),
+        customerPhone:
+          body.customerPhone.trim(),
+        deliveryAddress:
+          body.deliveryAddress.trim(),
+        deliveryCity:
+          body.deliveryCity.trim(),
+        deliveryState:
+          body.deliveryState.trim(),
+        customerNotes:
+          body.customerNotes?.trim() || null,
+
         subtotal,
         totalAmount: subtotal,
+
         status: "PENDING",
         paymentStatus: "UNPAID",
+
         items: {
           create: orderItems,
         },
       },
+
       include: {
         items: true,
       },
@@ -197,7 +230,8 @@ export async function POST(request: Request) {
           subtotal: Number(order.subtotal),
           totalAmount: Number(order.totalAmount),
           itemCount: order.items.reduce(
-            (count, item) => count + item.quantity,
+            (count, item) =>
+              count + item.quantity,
             0
           ),
           createdAt: order.createdAt,
@@ -206,12 +240,16 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Order creation error:", error);
+    console.error(
+      "Order creation error:",
+      error
+    );
 
     return NextResponse.json(
       {
         success: false,
-        message: "Unable to create your order. Please try again.",
+        message:
+          "Unable to create your order. Please try again.",
       },
       { status: 500 }
     );

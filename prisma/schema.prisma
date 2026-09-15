@@ -7,53 +7,50 @@ datasource db {
 }
 
 model User {
-  id              String        @id @default(cuid())
-  firstName       String
-  lastName        String
-  email           String        @unique
-  phone           String        @unique
-  passwordHash    String
-  role            UserRole
-  status          AccountStatus @default(PENDING)
-  verified        Boolean       @default(false)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  profileImageUrl String?
-  stcUserNumber String?
-  referralCode  String?
-  referredById    String?
-
-  businessPage      BusinessPage?
-  favorites         Favorite[]
-  identityDocuments IdentityDocument[]
-  listings          Listing[]
-  notifications     Notification[]
-  reviews           Review[]
-  sessions          Session[]
-  wallet            Wallet?
-  orders            Order[]
-  referralsSent     Referral[]       @relation("Referrer")
-  referralReceived  Referral?        @relation("ReferredUser")
-  pointsWallet      PointsWallet?
+  id                 String              @id @default(cuid())
+  firstName          String
+  lastName           String
+  email              String              @unique
+  phone              String              @unique
+  passwordHash       String
+  role               UserRole
+  status             AccountStatus       @default(PENDING)
+  verified           Boolean             @default(false)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  profileImageUrl    String?
+  referralCode       String?
+  referredById       String?
+  stcUserNumber      String?
+  businessPage       BusinessPage?
+  favorites          Favorite[]
+  identityDocuments  IdentityDocument[]
+  listings           Listing[]
+  notifications      Notification[]
+  orders             Order[]
   pointsTransactions PointsTransaction[]
-
-  referredBy User? @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
-  referrals User[] @relation("UserReferrals")
+  pointsWallet       PointsWallet?
+  referralReceived   Referral?           @relation("ReferredUser")
+  referralsSent      Referral[]          @relation("Referrer")
+  reviews            Review[]
+  sessions           Session[]
+  referredBy         User?               @relation("UserReferrals", fields: [referredById], references: [id])
+  referrals          User[]              @relation("UserReferrals")
+  wallet             Wallet?
 }
 
 model Referral {
-  id             String         @id @default(cuid())
-  referrerId     String
-  referredUserId String         @unique
-  status         ReferralStatus @default(PENDING)
-  rewardPoints   Int            @default(1000)
+  id               String         @id @default(cuid())
+  referrerId       String
+  referredUserId   String         @unique
+  status           ReferralStatus @default(PENDING)
+  rewardPoints     Int            @default(1000)
   qualifyingAction String?
-  rewardedAt     DateTime?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-
-  referrer     User @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
-  referredUser User @relation("ReferredUser", fields: [referredUserId], references: [id], onDelete: Cascade)
+  rewardedAt       DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  referredUser     User           @relation("ReferredUser", fields: [referredUserId], references: [id], onDelete: Cascade)
+  referrer         User           @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
 
   @@index([referrerId])
   @@index([status])
@@ -61,29 +58,27 @@ model Referral {
 }
 
 model PointsWallet {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  balance   Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String              @id @default(cuid())
+  userId       String              @unique
+  balance      Int                 @default(0)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
   transactions PointsTransaction[]
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model PointsTransaction {
-  id          String              @id @default(cuid())
+  id          String                  @id @default(cuid())
   walletId    String
   userId      String
-  reference   String              @unique
+  reference   String                  @unique
   type        PointsTransactionType
   status      PointsTransactionStatus @default(SUCCESS)
   amount      Int
   description String
-  createdAt   DateTime            @default(now())
-
-  wallet PointsWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
-  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime                @default(now())
+  user        User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wallet      PointsWallet            @relation(fields: [walletId], references: [id], onDelete: Cascade)
 
   @@index([walletId])
   @@index([userId])
@@ -98,8 +93,7 @@ model Session {
   expiresAt DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
@@ -116,8 +110,7 @@ model IdentityDocument {
   uploadedAt         DateTime             @default(now())
   reviewedAt         DateTime?
   reviewedBy         String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([documentType])
@@ -126,12 +119,11 @@ model IdentityDocument {
 }
 
 model Wallet {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  balance   Decimal  @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id           String              @id @default(cuid())
+  userId       String              @unique
+  balance      Decimal             @default(0)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
   user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions WalletTransaction[]
 }
@@ -144,8 +136,7 @@ model WalletTransaction {
   status    WalletTransactionStatus
   amount    Decimal
   createdAt DateTime                @default(now())
-
-  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  wallet    Wallet                  @relation(fields: [walletId], references: [id], onDelete: Cascade)
 
   @@index([walletId])
   @@index([createdAt])
@@ -162,8 +153,7 @@ model Notification {
   isRead    Boolean          @default(false)
   createdAt DateTime         @default(now())
   readAt    DateTime?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([userId, isRead])
@@ -180,27 +170,25 @@ model BusinessPage {
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   verificationStatus VerificationStatus @default(PENDING)
-
-  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner              User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 }
 
 model Listing {
-  id          String        @id @default(cuid())
+  id          String         @id @default(cuid())
   ownerId     String
   listingType ListingType
-  status      ListingStatus @default(PENDING)
+  status      ListingStatus  @default(PENDING)
   title       String
-  slug        String        @unique
+  slug        String         @unique
   description String
   price       Decimal
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-
-  favorites Favorite[]
-  owner     User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  images    ListingImage[]
-  property  Property?
-  reviews   Review[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  favorites   Favorite[]
+  owner       User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  images      ListingImage[]
+  property    Property?
+  reviews     Review[]
 }
 
 model ListingImage {
@@ -208,8 +196,7 @@ model ListingImage {
   listingId String
   imageUrl  String
   createdAt DateTime @default(now())
-
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
 }
 
 model Favorite {
@@ -217,9 +204,8 @@ model Favorite {
   userId    String
   listingId String
   createdAt DateTime @default(now())
-
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, listingId])
   @@index([userId])
@@ -234,9 +220,8 @@ model Review {
   comment    String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-
-  listing  Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  reviewer User    @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reviewer   User     @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
 
   @@index([listingId])
   @@index([reviewerId])
@@ -246,16 +231,15 @@ model Review {
 }
 
 model Property {
-  id        String           @id @default(cuid())
-  listingId String           @unique
-  category  PropertyCategory
-  purpose   PropertyPurpose
-  state     String
-  city      String
-  address   String
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-
+  id          String               @id @default(cuid())
+  listingId   String               @unique
+  category    PropertyCategory
+  purpose     PropertyPurpose
+  state       String
+  city        String
+  address     String
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
   listing     Listing              @relation(fields: [listingId], references: [id], onDelete: Cascade)
   documents   PropertyDocument[]
   features    PropertyFeature[]
@@ -263,24 +247,22 @@ model Property {
 }
 
 model PropertyFeature {
-  id         String  @id @default(cuid())
+  id         String   @id @default(cuid())
   propertyId String
   name       String
   value      String?
-
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@index([propertyId])
 }
 
 model PropertyDocument {
-  id         String  @id @default(cuid())
+  id         String   @id @default(cuid())
   propertyId String
   title      String
   fileUrl    String
-  verified   Boolean @default(false)
-
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  verified   Boolean  @default(false)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@index([propertyId])
 }
@@ -291,38 +273,35 @@ model PropertyInspection {
   customerName   String
   inspectionDate DateTime
   status         String
-
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  property       Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@index([propertyId])
   @@index([inspectionDate])
 }
 
 model CatalogueProduct {
-  id          String               @id @default(cuid())
+  id          String                  @id @default(cuid())
   productType CatalogueProductType
   name        String
   description String?
-  active      Boolean              @default(true)
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
+  active      Boolean                 @default(true)
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
   price       Decimal?
-
-  images     CatalogueProductImage[]
-  orderItems OrderItem[]
+  images      CatalogueProductImage[]
+  orderItems  OrderItem[]
 
   @@index([productType])
   @@index([active])
 }
 
 model CatalogueProductImage {
-  id        String   @id @default(cuid())
+  id        String           @id @default(cuid())
   productId String
   imageUrl  String
-  isPrimary Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  product CatalogueProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  isPrimary Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  product   CatalogueProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
   @@index([productId, isPrimary])
@@ -346,9 +325,8 @@ model Order {
   paymentStatus     PaymentStatus @default(UNPAID)
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
-
-  user  User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
-  items OrderItem[]
+  user              User?         @relation(fields: [userId], references: [id])
+  items             OrderItem[]
 
   @@index([userId])
   @@index([status])
@@ -358,7 +336,7 @@ model Order {
 }
 
 model OrderItem {
-  id                 String   @id @default(cuid())
+  id                 String            @id @default(cuid())
   orderId            String
   catalogueProductId String?
   productName        String
@@ -370,10 +348,9 @@ model OrderItem {
   unitPrice          Decimal
   quantity           Int
   lineTotal          Decimal
-  createdAt          DateTime @default(now())
-
-  order            Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  catalogueProduct CatalogueProduct? @relation(fields: [catalogueProductId], references: [id], onDelete: SetNull)
+  createdAt          DateTime          @default(now())
+  catalogueProduct   CatalogueProduct? @relation(fields: [catalogueProductId], references: [id])
+  order              Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
   @@index([catalogueProductId])
@@ -519,4 +496,3 @@ enum PropertyPurpose {
   RENT
   SHORTLET
 }
-

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   Bell,
@@ -32,29 +33,23 @@ export default function DashboardHeader({
 }: DashboardHeaderProps) {
   const { openSidebar } = useDashboard();
 
-  const [user, setUser] =
-    useState<UserProfile>({
-      fullName: "Loading...",
-      role: "",
-      profileImageUrl: null,
-    });
+  const [user, setUser] = useState<UserProfile>({
+    fullName: "Loading...",
+    role: "",
+    profileImageUrl: null,
+  });
 
-  const [
-    notificationsOpen,
-    setNotificationsOpen,
-  ] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] =
+    useState(false);
 
   useEffect(() => {
     let mounted = true;
 
     async function loadUser() {
       try {
-        const response = await fetch(
-          "/api/user/me",
-          {
-            cache: "no-store",
-          }
-        );
+        const response = await fetch("/api/user/me", {
+          cache: "no-store",
+        });
 
         const data = await response.json();
 
@@ -65,13 +60,10 @@ export default function DashboardHeader({
           data.user
         ) {
           setUser({
-            fullName:
-              data.user.fullName,
-            role:
-              data.user.role,
+            fullName: data.user.fullName,
+            role: data.user.role,
             profileImageUrl:
-              data.user.profileImageUrl ||
-              null,
+              data.user.profileImageUrl || null,
           });
         }
       } catch (error) {
@@ -93,8 +85,7 @@ export default function DashboardHeader({
 
       setUser((currentUser) => ({
         ...currentUser,
-        profileImageUrl:
-          event.detail.imageUrl,
+        profileImageUrl: event.detail.imageUrl,
       }));
     }
 
@@ -169,9 +160,7 @@ export default function DashboardHeader({
               }
               className="relative rounded-lg p-2 hover:bg-slate-100"
               aria-label="Notifications"
-              aria-expanded={
-                notificationsOpen
-              }
+              aria-expanded={notificationsOpen}
             >
               {notificationsOpen ? (
                 <X size={26} />
@@ -191,17 +180,21 @@ export default function DashboardHeader({
 
           {/* USER */}
 
-          <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard/profile"
+            className="group flex items-center gap-3 rounded-xl p-1.5 transition hover:bg-slate-100"
+            aria-label="Open my profile"
+          >
             {user.profileImageUrl ? (
               <img
                 src={user.profileImageUrl}
                 alt={user.fullName}
-                className="h-[42px] w-[42px] rounded-full object-cover"
+                className="h-[42px] w-[42px] rounded-full object-cover ring-2 ring-transparent transition group-hover:ring-blue-200"
               />
             ) : (
               <UserCircle2
                 size={42}
-                className="text-blue-900"
+                className="text-blue-900 transition group-hover:text-blue-700"
               />
             )}
 
@@ -214,7 +207,7 @@ export default function DashboardHeader({
                 {user.role}
               </p>
             </div>
-          </div>
+          </Link>
         </div>
       </div>
     </header>
