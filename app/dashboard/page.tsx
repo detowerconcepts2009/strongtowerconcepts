@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import DashboardCards from "@/components/dashboard/DashboardCards";
@@ -28,20 +29,15 @@ export default function DashboardPage() {
     messages: 0,
   });
 
-  const [user, setUser] = useState<DashboardUser>({
-    firstName: "",
-    role: "",
-  });
-
+  const [user, setUser] = useState<DashboardUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     async function loadDashboard() {
       try {
-        const [
-          statsResponse,
-          userResponse,
-        ] = await Promise.all([
+        const [statsResponse, userResponse] = await Promise.all([
           fetch("/api/dashboard/stats", {
             cache: "no-store",
           }),
@@ -50,59 +46,79 @@ export default function DashboardPage() {
           }),
         ]);
 
-        const statsResult =
-          await statsResponse.json();
+        const statsResult = await statsResponse.json();
+        const userResult = await userResponse.json();
 
-        const userResult =
-          await userResponse.json();
+        if (!mounted) return;
 
         if (statsResult.success) {
           setStats({
             walletBalance: Number(
-              statsResult.stats.walletBalance
+              statsResult.stats?.walletBalance ?? 0
             ),
-            properties:
-              statsResult.stats.properties,
-            businesses:
-              statsResult.stats.businesses,
-            listings:
-              statsResult.stats.listings,
-            messages:
-              statsResult.stats.messages,
+            properties: Number(
+              statsResult.stats?.properties ?? 0
+            ),
+            businesses: Number(
+              statsResult.stats?.businesses ?? 0
+            ),
+            listings: Number(
+              statsResult.stats?.listings ?? 0
+            ),
+            messages: Number(
+              statsResult.stats?.messages ?? 0
+            ),
           });
         }
 
-        if (
-          userResult.success &&
-          userResult.user
-        ) {
+        if (userResult.success && userResult.user) {
           setUser({
-            firstName:
-              userResult.user.firstName,
-            role:
-              userResult.user.role,
+            firstName: userResult.user.firstName || "",
+            role: userResult.user.role || "",
           });
         }
       } catch (error) {
-        console.error(
-          "Dashboard loading error:",
-          error
-        );
+        console.error("Dashboard loading error:", error);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
 
     loadDashboard();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  const isCustomer =
-    user.role === "CUSTOMER";
+  if (loading || !user) {
+    return (
+      <DashboardLayout title="Dashboard">
+        <div className="mt-8 rounded-3xl border border-blue-100 bg-white p-8 shadow-sm">
+          <div className="animate-pulse">
+            <div className="h-8 w-48 rounded bg-slate-200" />
+            <div className="mt-3 h-4 w-72 max-w-full rounded bg-slate-100" />
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="h-28 rounded-2xl bg-slate-100" />
+              <div className="h-28 rounded-2xl bg-slate-100" />
+              <div className="h-28 rounded-2xl bg-slate-100" />
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const isCustomer = user.role === "CUSTOMER";
 
   return (
     <DashboardLayout title="Dashboard">
       <WelcomeCard
         firstName={user.firstName}
+        role={user.role}
       />
 
       {isCustomer ? (
@@ -113,12 +129,7 @@ export default function DashboardPage() {
             </p>
 
             <h2 className="mt-2 text-3xl font-bold text-slate-900">
-              ₦
-              {loading
-                ? "0"
-                : stats.walletBalance.toLocaleString(
-                    "en-NG"
-                  )}
+              ₦{stats.walletBalance.toLocaleString("en-NG")}
             </h2>
 
             <p className="mt-2 text-sm text-slate-500">
@@ -141,46 +152,24 @@ export default function DashboardPage() {
               interior products.
             </p>
 
-            <a
+            <Link
               href="/marketplace/interior"
               className="mt-4 inline-flex rounded-lg bg-blue-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-800"
             >
               Browse Catalogue
-            </a>
+            </Link>
           </div>
         </div>
       ) : (
-        <>
-          <div className="mt-6">
-            <DashboardCards
-              walletBalance={
-                loading
-                  ? 0
-                  : stats.walletBalance
-              }
-              properties={
-                loading
-                  ? 0
-                  : stats.properties
-              }
-              businesses={
-                loading
-                  ? 0
-                  : stats.businesses
-              }
-              listings={
-                loading
-                  ? 0
-                  : stats.listings
-              }
-              messages={
-                loading
-                  ? 0
-                  : stats.messages
-              }
-            />
-          </div>
-        </>
+        <div className="mt-6">
+          <DashboardCards
+            walletBalance={stats.walletBalance}
+            properties={stats.properties}
+            businesses={stats.businesses}
+            listings={stats.listings}
+            messages={stats.messages}
+          />
+        </div>
       )}
     </DashboardLayout>
   );
