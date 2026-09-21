@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { mattressCatalogue } from "@/data/mattressCatalogue";
 
 interface OrderItemInput {
   productId: string;
@@ -137,34 +138,104 @@ export async function POST(request: Request) {
         );
       }
 
-      if (product.price == null) {
+      let unitPrice: number;
+
+      if (product.productType === "MATTRESS") {
+        if (
+          !item.model ||
+          typeof item.lengthInches !== "number" ||
+          typeof item.widthInches !== "number" ||
+          typeof item.thicknessInches !== "number"
+        ) {
+          return NextResponse.json(
+            {
+              success: false,
+              message:
+                `Please select a valid model, size and thickness for ${product.name}.`,
+            },
+            { status: 400 }
+          );
+        }
+
+        const selectedMattress =
+          mattressCatalogue.find(
+            (catalogueItem) =>
+              catalogueItem.model === item.model &&
+              catalogueItem.lengthInches ===
+                item.lengthInches &&
+              catalogueItem.widthInches ===
+                item.widthInches &&
+              catalogueItem.thicknessInches ===
+                item.thicknessInches &&
+              catalogueItem.price != null
+          );
+
+        if (
+          !selectedMattress ||
+          selectedMattress.price == null
+        ) {
+          return NextResponse.json(
+            {
+              success: false,
+              message:
+                "The selected mattress configuration is no longer available. Please return to the product page and select another configuration.",
+            },
+            { status: 400 }
+          );
+        }
+
+        unitPrice =
+          selectedMattress.price;
+      } else {
+        if (product.price == null) {
+          return NextResponse.json(
+            {
+              success: false,
+              message:
+                `${product.name} does not currently have a valid price.`,
+            },
+            { status: 400 }
+          );
+        }
+
+        unitPrice = Number(product.price);
+      }
+
+      if (
+        !Number.isFinite(unitPrice) ||
+        unitPrice < 0
+      ) {
         return NextResponse.json(
           {
             success: false,
-            message: `${product.name} does not currently have a valid price.`,
+            message:
+              `${product.name} does not currently have a valid price.`,
           },
           { status: 400 }
         );
       }
 
-      const unitPrice = Number(product.price);
-      const lineTotal = unitPrice * quantity;
+      const lineTotal =
+        unitPrice * quantity;
 
       orderItems.push({
         catalogueProductId: product.id,
         productName: product.name,
         productType: product.productType,
-        model: item.model || null,
+        model:
+          product.productType === "MATTRESS"
+            ? item.model
+            : null,
         lengthInches:
-          typeof item.lengthInches === "number"
+          product.productType === "MATTRESS"
             ? item.lengthInches
             : null,
         widthInches:
-          typeof item.widthInches === "number"
+          product.productType === "MATTRESS"
             ? item.widthInches
             : null,
         thicknessInches:
-          typeof item.thicknessInches === "number"
+          product.productType === "MATTRESS"
             ? item.thicknessInches
             : null,
         unitPrice,
@@ -179,18 +250,36 @@ export async function POST(request: Request) {
       0
     );
 
+    if (
+      !Number.isFinite(subtotal) ||
+      subtotal < 0
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Unable to calculate the order total.",
+        },
+        { status: 400 }
+      );
+    }
+
     const order = await prisma.order.create({
       data: {
-        orderNumber: generateOrderNumber(),
+        orderNumber:
+          generateOrderNumber(),
 
-        userId: currentUser?.id ?? null,
+        userId:
+          currentUser?.id ?? null,
 
         customerFirstName:
           body.customerFirstName.trim(),
         customerLastName:
           body.customerLastName.trim(),
         customerEmail:
-          body.customerEmail.trim().toLowerCase(),
+          body.customerEmail
+            .trim()
+            .toLowerCase(),
         customerPhone:
           body.customerPhone.trim(),
         deliveryAddress:
@@ -200,7 +289,8 @@ export async function POST(request: Request) {
         deliveryState:
           body.deliveryState.trim(),
         customerNotes:
-          body.customerNotes?.trim() || null,
+          body.customerNotes?.trim() ||
+          null,
 
         subtotal,
         totalAmount: subtotal,
@@ -221,20 +311,27 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: true,
-        message: "Order created successfully.",
+        message:
+          "Order created successfully.",
         order: {
           id: order.id,
-          orderNumber: order.orderNumber,
+          orderNumber:
+            order.orderNumber,
           status: order.status,
-          paymentStatus: order.paymentStatus,
-          subtotal: Number(order.subtotal),
-          totalAmount: Number(order.totalAmount),
-          itemCount: order.items.reduce(
-            (count, item) =>
-              count + item.quantity,
-            0
-          ),
-          createdAt: order.createdAt,
+          paymentStatus:
+            order.paymentStatus,
+          subtotal:
+            Number(order.subtotal),
+          totalAmount:
+            Number(order.totalAmount),
+          itemCount:
+            order.items.reduce(
+              (count, item) =>
+                count + item.quantity,
+              0
+            ),
+          createdAt:
+            order.createdAt,
         },
       },
       { status: 201 }

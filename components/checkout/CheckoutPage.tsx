@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { CheckCircle2, Loader2, ShoppingBag } from "lucide-react";
 import { useCart } from "@/components/cart/CartProvider";
@@ -37,9 +36,7 @@ const initialForm: CheckoutForm = {
 };
 
 export default function CheckoutPage() {
-  const router = useRouter();
-
-  const { items, itemCount, subtotal, clearCart } = useCart();
+  const { items, itemCount, subtotal } = useCart();
 
   const [form, setForm] = useState<CheckoutForm>(initialForm);
   const [loading, setLoading] = useState(false);
@@ -95,7 +92,7 @@ export default function CheckoutPage() {
     try {
       setLoading(true);
 
-      const response = await fetch("/api/orders", {
+      const orderResponse = await fetch("/api/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -123,79 +120,64 @@ export default function CheckoutPage() {
         }),
       });
 
-      const result = await response.json();
+      const orderResult = await orderResponse.json();
 
-      if (!response.ok || !result.success) {
+      if (!orderResponse.ok || !orderResult.success) {
         throw new Error(
-          result.message || "Unable to create your order."
+          orderResult.error ||
+            orderResult.message ||
+            "Unable to create your order."
         );
       }
 
-      setOrderNumber(result.order.orderNumber);
-      clearCart();
+      const createdOrderNumber = orderResult.order?.orderNumber;
+
+      if (!createdOrderNumber) {
+        throw new Error(
+          "Your order was created, but no order number was returned."
+        );
+      }
+
+      setOrderNumber(createdOrderNumber);
+
+      const paymentResponse = await fetch("/api/payments/initialize", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderNumber: createdOrderNumber,
+        }),
+      });
+
+      const paymentResult = await paymentResponse.json();
+
+      if (!paymentResponse.ok || !paymentResult.success) {
+        throw new Error(
+          paymentResult.error ||
+            "Your order was created, but payment could not be initialized."
+        );
+      }
+
+      if (!paymentResult.authorizationUrl) {
+        throw new Error(
+          "Paystack did not return a payment authorization URL."
+        );
+      }
+
+      window.location.href = paymentResult.authorizationUrl;
     } catch (submitError) {
       setError(
         submitError instanceof Error
           ? submitError.message
-          : "Unable to create your order. Please try again."
+          : "Unable to process your order. Please try again."
       );
     } finally {
       setLoading(false);
     }
   }
 
-  if (orderNumber) {
-    return (
-      <main className="min-h-screen bg-slate-50">
-        <section className="mx-auto max-w-3xl px-6 py-20">
-          <div className="rounded-3xl bg-white p-10 text-center shadow-sm">
-            <CheckCircle2 className="mx-auto h-20 w-20 text-green-600" />
-
-            <h1 className="mt-6 text-3xl font-bold text-slate-900">
-              Order Received
-            </h1>
-
-            <p className="mt-3 text-slate-600">
-              Thank you for your order. Your order has been successfully
-              created.
-            </p>
-
-            <div className="mx-auto mt-8 max-w-md rounded-2xl bg-slate-50 p-6">
-              <p className="text-sm text-slate-500">Order Number</p>
-
-              <p className="mt-2 text-2xl font-bold text-blue-900">
-                {orderNumber}
-              </p>
-
-              <div className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                Payment has not been made yet. Payment processing will be
-                available in the next stage.
-              </div>
-            </div>
-
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Link
-                href="/marketplace/interior"
-                className="rounded-xl bg-blue-900 px-6 py-3 font-semibold text-white transition hover:bg-blue-800"
-              >
-                Continue Shopping
-              </Link>
-
-              <button
-                type="button"
-                onClick={() => router.push("/")}
-                className="rounded-xl border-2 border-blue-900 px-6 py-3 font-semibold text-blue-900 transition hover:bg-blue-50"
-              >
-                Back to Home
-              </button>
-            </div>
-          </div>
-        </section>
-      </main>
-    );
-  }
-
-  if (items.length === 0) {
+  if (items.length === 0 && !orderNumber) {
     return (
       <main className="min-h-screen bg-slate-50">
         <section className="mx-auto max-w-3xl px-6 py-20">
@@ -238,7 +220,8 @@ export default function CheckoutPage() {
           </h1>
 
           <p className="mt-2 text-slate-500">
-            Complete your information to place your order.
+            Complete your information to place your order and proceed to
+            secure payment.
           </p>
         </div>
 
@@ -364,10 +347,17 @@ export default function CheckoutPage() {
                     </p>
 
                     {item.model && (
-                      <p className="text-sm text-slate-500">
-                        {item.model}
-                      </p>
+                      <p className="text-sm text-slate-500">{item.model}</p>
                     )}
+
+                    {item.lengthInches &&
+                      item.widthInches &&
+                      item.thicknessInches && (
+                        <p className="text-sm text-slate-500">
+                          {item.lengthInches} × {item.widthInches} ×{" "}
+                          {item.thicknessInches}"
+                        </p>
+                      )}
 
                     <p className="text-sm text-slate-500">
                       Qty: {item.quantity}
@@ -405,23 +395,27 @@ export default function CheckoutPage() {
 
             <button
               type="submit"
-              aria-disabled={loading}
-              className={`mt-8 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-blue-900 px-6 py-3 font-semibold text-white transition hover:bg-blue-800 active:scale-[0.99] ${
-                loading ? "cursor-wait opacity-60" : ""
+              disabled={loading}
+              className={`mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-900 px-6 py-3 font-semibold text-white transition hover:bg-blue-800 active:scale-[0.99] ${
+                loading
+                  ? "cursor-wait opacity-60"
+                  : "cursor-pointer"
               }`}
             >
               {loading ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  Creating Order...
+                  {orderNumber
+                    ? "Redirecting to Payment..."
+                    : "Creating Order..."}
                 </>
               ) : (
-                "Place Order"
+                "Proceed to Payment"
               )}
             </button>
 
             <p className="mt-3 text-center text-xs text-slate-500">
-              Payment will be handled in the next stage.
+              You will be redirected to Paystack's secure payment page.
             </p>
           </aside>
         </form>

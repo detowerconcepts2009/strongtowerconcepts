@@ -323,6 +323,8 @@ model Order {
   totalAmount       Decimal
   status            OrderStatus   @default(PENDING)
   paymentStatus     PaymentStatus @default(UNPAID)
+  paymentReference  String?       @unique
+  paidAt            DateTime?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   user              User?         @relation(fields: [userId], references: [id])

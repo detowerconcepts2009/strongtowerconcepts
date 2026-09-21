@@ -25,7 +25,6 @@ interface Order {
   deliveryCity: string;
   deliveryState: string;
   subtotal: number | string;
-  deliveryFee: number | string;
   totalAmount: number | string;
   status: string;
   paymentStatus: string;
@@ -65,6 +64,25 @@ function formatDate(value: string) {
 
 function displayStatus(value: string) {
   return value.replaceAll("_", " ");
+}
+
+function displayPaymentStatus(value: string) {
+  switch (value) {
+    case "PAID":
+      return "PAYMENT APPROVED";
+
+    case "FAILED":
+      return "PAYMENT FAILED";
+
+    case "REFUNDED":
+      return "PAYMENT REFUNDED";
+
+    case "UNPAID":
+      return "PAYMENT PENDING";
+
+    default:
+      return value.replaceAll("_", " ");
+  }
 }
 
 function statusClass(status: string) {
@@ -116,20 +134,15 @@ export default function MyOrdersPage() {
         setLoading(true);
         setError("");
 
-        const response = await fetch(
-          "/api/orders/my",
-          {
-            cache: "no-store",
-          }
-        );
+        const response = await fetch("/api/orders/my", {
+          cache: "no-store",
+        });
 
-        const data: ApiResponse =
-          await response.json();
+        const data: ApiResponse = await response.json();
 
         if (!response.ok || !data.success) {
           throw new Error(
-            data.message ||
-              "Unable to load your orders."
+            data.message || "Unable to load your orders."
           );
         }
 
@@ -168,8 +181,7 @@ export default function MyOrdersPage() {
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              View your marketplace orders and
-              payment status.
+              View your marketplace orders and payment status.
             </p>
           </div>
 
@@ -205,9 +217,8 @@ export default function MyOrdersPage() {
                 </h3>
 
                 <p className="mt-2 text-sm leading-6 text-slate-500">
-                  You have not placed any marketplace
-                  orders yet. Browse our catalogue and
-                  find something you like.
+                  You have not placed any marketplace orders yet.
+                  Browse our catalogue and find something you like.
                 </p>
 
                 <Link
@@ -241,9 +252,7 @@ export default function MyOrdersPage() {
                         </h3>
 
                         <p className="mt-1 text-xs text-slate-500">
-                          {formatDate(
-                            order.createdAt
-                          )}
+                          {formatDate(order.createdAt)}
                         </p>
                       </div>
 
@@ -253,9 +262,7 @@ export default function MyOrdersPage() {
                             order.status
                           )}`}
                         >
-                          {displayStatus(
-                            order.status
-                          )}
+                          {displayStatus(order.status)}
                         </span>
 
                         <span
@@ -263,10 +270,7 @@ export default function MyOrdersPage() {
                             order.paymentStatus
                           )}`}
                         >
-                          Payment:{" "}
-                          {displayStatus(
-                            order.paymentStatus
-                          )}
+                          {displayPaymentStatus(order.paymentStatus)}
                         </span>
                       </div>
                     </div>
@@ -296,36 +300,20 @@ export default function MyOrdersPage() {
                           </div>
 
                           <p className="font-semibold text-slate-900">
-                            {formatCurrency(
-                              item.lineTotal
-                            )}
+                            {formatCurrency(item.lineTotal)}
                           </p>
                         </div>
                       ))}
                     </div>
 
-                    <div className="mt-5 grid gap-4 border-t border-slate-100 pt-5 sm:grid-cols-3">
+                    <div className="mt-5 grid gap-4 border-t border-slate-100 pt-5 sm:grid-cols-2">
                       <div>
                         <p className="text-xs font-semibold uppercase text-slate-400">
                           Subtotal
                         </p>
 
                         <p className="mt-1 font-semibold text-slate-800">
-                          {formatCurrency(
-                            order.subtotal
-                          )}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs font-semibold uppercase text-slate-400">
-                          Delivery Fee
-                        </p>
-
-                        <p className="mt-1 font-semibold text-slate-800">
-                          {formatCurrency(
-                            order.deliveryFee
-                          )}
+                          {formatCurrency(order.subtotal)}
                         </p>
                       </div>
 
@@ -335,9 +323,7 @@ export default function MyOrdersPage() {
                         </p>
 
                         <p className="mt-1 text-lg font-bold text-blue-700">
-                          {formatCurrency(
-                            order.totalAmount
-                          )}
+                          {formatCurrency(order.totalAmount)}
                         </p>
                       </div>
                     </div>
