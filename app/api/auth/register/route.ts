@@ -28,7 +28,15 @@ const allowedMimeTypes = [
 
 const REFERRAL_REWARD_POINTS = 1000;
 
-type TransactionClient = Pick<typeof prisma, "user">;
+type TransactionClient = Pick<
+  typeof prisma,
+  | "user"
+  | "identityDocument"
+  | "wallet"
+  | "walletTransaction"
+  | "pointsWallet"
+  | "referral"
+>;
 
 function generateReferralCode() {
   const characters =
@@ -316,10 +324,6 @@ export async function POST(
       );
     }
 
-    /*
-     * Validate referral code before saving
-     * the identity document.
-     */
     let referrerId: string | null = null;
 
     if (referralCodeInput) {
@@ -362,10 +366,6 @@ export async function POST(
 
       referrerId = referrer.id;
     }
-
-    /*
-     * Save identity document
-     */
 
     const uploadDirectory =
       path.join(
@@ -426,10 +426,6 @@ export async function POST(
     const documentUrl =
       `/uploads/identity/${uniqueFileName}`;
 
-    /*
-     * Create account and related records
-     */
-
     const passwordHash =
       await bcrypt.hash(
         password,
@@ -438,7 +434,9 @@ export async function POST(
 
     const user =
       await prisma.$transaction(
-        async (tx) => {
+        async (
+          tx: TransactionClient
+        ) => {
           const stcUserNumber =
             await generateUniqueStcUserNumber(
               tx
