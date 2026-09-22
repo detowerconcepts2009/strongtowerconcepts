@@ -4,6 +4,21 @@ import prisma from "@/lib/prisma";
 
 const ALLOWED_ROLES = ["SUPER_ADMIN", "ADMIN", "STAFF"];
 
+type AdminOrder = Awaited<
+  ReturnType<typeof getAdminOrders>
+>[number];
+
+async function getAdminOrders() {
+  return prisma.order.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      items: true,
+    },
+  });
+}
+
 export async function GET() {
   try {
     const user = await getCurrentUser();
@@ -25,18 +40,11 @@ export async function GET() {
       );
     }
 
-    const orders = await prisma.order.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
-      include: {
-        items: true,
-      },
-    });
+    const orders = await getAdminOrders();
 
     return NextResponse.json({
       success: true,
-      orders: orders.map((order) => ({
+      orders: orders.map((order: AdminOrder) => ({
         id: order.id,
         orderNumber: order.orderNumber,
         customerFirstName: order.customerFirstName,
