@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { promises as fs } from "fs";
 import path from "path";
 
@@ -44,7 +45,7 @@ function generateReferralCode() {
 }
 
 async function generateUniqueReferralCode(
-  tx: any
+  tx: Prisma.TransactionClient
 ) {
   for (let attempt = 0; attempt < 20; attempt++) {
     const code = generateReferralCode();
@@ -69,7 +70,7 @@ async function generateUniqueReferralCode(
 }
 
 async function generateUniqueStcUserNumber(
-  tx: any
+  tx: Prisma.TransactionClient
 ) {
   const users = await tx.user.findMany({
     where: {
